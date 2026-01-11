@@ -1,15 +1,14 @@
-## 개발 환경
+# TODO 요리사
 
-- Python
-- Django
-- PostgrSQL
+할일을 맛있게 요리해 줍니다.
 
 ## 기술 스택
 
 - python 3.14
-- Django 6 (Django Template)
+- Django 6 (+ Django Template)
 - uv (package manager)
 - ruff (linter & formatter)
+- mypy (type checker)
 
 ### 개발환경 설정
 
@@ -36,6 +35,9 @@ make dev
 
 ## 개발 환경
 
+- Python
+- Django
+- PostgreSQL
 - VSCode
   - 확장프로그램 목록
   - ruff (필수)
@@ -44,3 +46,5 @@ make dev
   - ClaudeCode
   - Codex
   - ...
+- django admin 활용 ?
+  - unfold 같은 admin 테마도 있음
