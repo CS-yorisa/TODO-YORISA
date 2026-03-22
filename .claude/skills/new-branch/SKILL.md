@@ -17,7 +17,7 @@ user_invocable: true
 
 ## 브랜치 이름 규칙
 
-- issue 번호가 있는 경우: `{prefix}/{AAA}-#{issue}-{BBB}`
+- issue 번호가 있는 경우: `{prefix}/{AAA}-{issue}-{BBB}`
 - issue 번호가 없는 경우: `{prefix}/{AAA}-{BBB}`
 
 공백은 `-`로 치환하고, 소문자로 통일합니다.
