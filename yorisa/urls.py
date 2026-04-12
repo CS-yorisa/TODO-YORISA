@@ -17,7 +17,9 @@ Including another URLconf
 
 from django.contrib import admin
 from django.shortcuts import render
-from django.urls import include, path
+from django.urls import path
+
+from todos.urls import api
 
 FEATURE_TEMPLATES = {
     "todo": "partials/feature_todo.html",
@@ -40,6 +42,6 @@ def feature_tab(request, tab):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", index, name="index"),
-    path("api/todos/", include("todos.urls")),
+    path("api/", api.urls),
     path("features/<str:tab>/", feature_tab, name="feature_tab"),
 ]
