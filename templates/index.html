@@ -1,10 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Django</title>
-</head>
-<body>
-<h2>Hello World</h2>
-</body>
-</html>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Todo Yorisa — 할 일을 완료하고, 요리 재료를 모아요{% endblock %}
+
+{% block body %}
+<header class="header">
+    <nav class="nav container">
+        <a href="/" class="nav__logo">
+            <span>🍳</span>
+            Todo Yorisa
+        </a>
+        <div class="nav__actions">
+            <a href="/accounts/login/" class="btn btn--ghost">로그인</a>
+            <a href="/accounts/signup/" class="btn btn--primary">회원가입</a>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container hero__inner">
+            <div class="hero__content">
+                <span class="badge">🎮 게임처럼 즐기는 할 일 관리</span>
+                <h1 class="hero__title">
+                    할 일을 완료하고<br>
+                    <span class="highlight">요리 재료</span>를 모아봐요
+                </h1>
+                <p class="hero__desc">
+                    Todo Yorisa는 단순한 TODO 앱이 아닙니다. 할 일을 완료할수록 포인트가 쌓이고,
+                    그 포인트로 요리 재료를 구매해 나만의 레시피를 완성하세요.
+                </p>
+                <div class="hero__cta">
+                    <a href="/accounts/signup/" class="btn btn--primary btn--lg">무료로 시작하기</a>
+                    <a href="#features" class="btn btn--outline btn--lg">기능 둘러보기</a>
+                </div>
+            </div>
+            <div class="hero__visual">
+                <div class="card card--preview">
+                    <div class="card__header">
+                        <span>오늘의 할 일</span>
+                        <span class="point-badge">🪙 320p</span>
+                    </div>
+                    <ul class="todo-preview">
+                        <li class="todo-item todo-item--done">
+                            <span class="todo-check">✓</span>
+                            <span class="todo-text">운동 30분 하기</span>
+                            <span class="todo-point">+30p</span>
+                        </li>
+                        <li class="todo-item todo-item--done">
+                            <span class="todo-check">✓</span>
+                            <span class="todo-text">책 20페이지 읽기</span>
+                            <span class="todo-point">+20p</span>
+                        </li>
+                        <li class="todo-item">
+                            <span class="todo-check">○</span>
+                            <span class="todo-text">프로젝트 보고서 작성</span>
+                            <span class="todo-point">+50p</span>
+                        </li>
+                        <li class="todo-item">
+                            <span class="todo-check">○</span>
+                            <span class="todo-text">장보기 목록 정리</span>
+                            <span class="todo-point">+10p</span>
+                        </li>
+                    </ul>
+                    <div class="card__footer">
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill" style="width: 50%"></div>
+                        </div>
+                        <span class="progress-label">오늘 50% 완료</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features (HTMX 탭) -->
+    <section class="features section" id="features">
+        <div class="container">
+            <h2 class="section__title">어떻게 동작하나요?</h2>
+            <p class="section__desc">세 가지 핵심 기능으로 할 일 관리를 게임처럼 즐겨보세요.</p>
+
+            <div class="feature-tabs">
+                <div class="feature-tabs__nav" role="tablist">
+                    <button
+                        class="tab-btn tab-btn--active"
+                        hx-get="/features/todo/"
+                        hx-target="#feature-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#feature-spinner"
+                        onclick="setActiveTab(this)"
+                        role="tab"
+                    >
+                        📋 할 일 관리
+                    </button>
+                    <button
+                        class="tab-btn"
+                        hx-get="/features/points/"
+                        hx-target="#feature-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#feature-spinner"
+                        onclick="setActiveTab(this)"
+                        role="tab"
+                    >
+                        🪙 포인트 시스템
+                    </button>
+                    <button
+                        class="tab-btn"
+                        hx-get="/features/shop/"
+                        hx-target="#feature-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#feature-spinner"
+                        onclick="setActiveTab(this)"
+                        role="tab"
+                    >
+                        🛒 재료 상점
+                    </button>
+                </div>
+
+                <div class="feature-tabs__content">
+                    <span id="feature-spinner" class="htmx-indicator spinner">로딩 중...</span>
+                    <div id="feature-content">
+                        {% include "partials/feature_todo.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats section section--alt">
+        <div class="container stats__grid">
+            <div class="stat-card">
+                <span class="stat-card__icon">✅</span>
+                <span class="stat-card__num">12,000+</span>
+                <span class="stat-card__label">완료된 할 일</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card__icon">🪙</span>
+                <span class="stat-card__num">5,200,000+</span>
+                <span class="stat-card__label">적립된 포인트</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card__icon">🥕</span>
+                <span class="stat-card__num">3,800+</span>
+                <span class="stat-card__label">구매된 재료</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card__icon">👨‍🍳</span>
+                <span class="stat-card__num">1,500+</span>
+                <span class="stat-card__label">활성 사용자</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta section">
+        <div class="container cta__inner">
+            <h2 class="cta__title">지금 바로 시작해보세요</h2>
+            <p class="cta__desc">회원가입은 무료입니다. 첫 가입 시 100 포인트를 드려요!</p>
+            <a href="/accounts/signup/" class="btn btn--primary btn--lg">무료로 시작하기 🎉</a>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer__inner">
+        <span class="nav__logo">🍳 Todo Yorisa</span>
+        <span class="footer__copy">© 2026 Todo Yorisa. All rights reserved.</span>
+    </div>
+</footer>
+
+<script>
+function setActiveTab(el) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-btn--active'));
+    el.classList.add('tab-btn--active');
+}
+</script>
+{% endblock %}

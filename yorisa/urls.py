@@ -19,12 +19,26 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
 
+FEATURE_TEMPLATES = {
+    "todo": "partials/feature_todo.html",
+    "points": "partials/feature_points.html",
+    "shop": "partials/feature_shop.html",
+}
+
 
 def index(request):
     return render(request, "index.html")
 
 
+def feature_tab(request, tab):
+    template = FEATURE_TEMPLATES.get(tab)
+    if template is None:
+        template = FEATURE_TEMPLATES["todo"]
+    return render(request, template)
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", index, name="index"),
+    path("features/<str:tab>/", feature_tab, name="feature_tab"),
 ]
