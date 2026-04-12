@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}회원가입 — Todo Yorisa{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+    <div class="auth-card">
+        <a href="/" class="auth-logo">🍳 Todo Yorisa</a>
+        <h1 class="auth-title">회원가입</h1>
+        <p class="auth-desc">계정을 만들고 할 일 관리를 시작하세요!</p>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="last_name" class="form-label">성</label>
+                    <input type="text" id="last_name" name="last_name" class="form-input" placeholder="홍" required>
+                </div>
+                <div class="form-group">
+                    <label for="first_name" class="form-label">이름</label>
+                    <input type="text" id="first_name" name="first_name" class="form-input" placeholder="길동" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username" class="form-label">아이디</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="사용할 아이디를 입력하세요" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">이메일</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="example@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">비밀번호</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="8자 이상 입력하세요" required minlength="8">
+            </div>
+
+            <div class="form-group">
+                <label for="password_confirm" class="form-label">비밀번호 확인</label>
+                <input type="password" id="password_confirm" name="password_confirm" class="form-input" placeholder="비밀번호를 다시 입력하세요" required minlength="8">
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--full">가입하기</button>
+        </form>
+
+        <p class="auth-footer">
+            이미 계정이 있으신가요? <a href="{% url 'accounts:login' %}" class="auth-link">로그인</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
