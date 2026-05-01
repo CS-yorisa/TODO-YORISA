@@ -20,10 +20,9 @@ def todo_create(request, payload: TodoCreate):
     if payload.category is not None:
         get_object_or_404(Category, id=payload.category, member=request.user)
 
-    todo = Todo.objects.create(
-        member=request.user,
-        **payload.dict(),
-    )
+    data = payload.dict()
+    data["category_id"] = data.pop("category")
+    todo = Todo.objects.create(member=request.user, **data)
     return 201, todo
 
 
@@ -39,7 +38,9 @@ def todo_update(request, todo_id: int, payload: TodoCreate):
     if payload.category is not None:
         get_object_or_404(Category, id=payload.category, member=request.user)
 
-    for attr, value in payload.dict().items():
+    data = payload.dict()
+    data["category_id"] = data.pop("category")
+    for attr, value in data.items():
         setattr(todo, attr, value)
     todo.save()
     return todo
@@ -52,6 +53,8 @@ def todo_patch(request, todo_id: int, payload: TodoPatch):
     data = payload.dict(exclude_unset=True)
     if "category" in data and data["category"] is not None:
         get_object_or_404(Category, id=data["category"], member=request.user)
+    if "category" in data:
+        data["category_id"] = data.pop("category")
 
     for attr, value in data.items():
         setattr(todo, attr, value)

@@ -20,5 +20,5 @@ class TodoList(Schema):
     title: str
     description: str
     status: str
-    category: int | None
-    member: int | None
+    category_id: int | None
+    member_id: int | None
