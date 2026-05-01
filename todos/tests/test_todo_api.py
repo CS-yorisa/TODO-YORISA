@@ -13,6 +13,7 @@ class TodoListTest(TestCase):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.other = Member.objects.create_user(username="user2", password="pass")
         self.todo = Todo.objects.create(member=self.member, title="할일")
+        assert self.todo is not None
 
     def test_list(self):
         response = client.get("/", user=self.member)
@@ -36,6 +37,7 @@ class TodoCreateTest(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.category = Category.objects.create(member=self.member, name="업무")
+        assert self.category is not None
 
     def test_create(self):
         response = client.post(
@@ -49,18 +51,18 @@ class TodoCreateTest(TestCase):
     def test_create_with_category(self):
         response = client.post(
             "/",
-            json={"title": "할일", "category": self.category.id},
+            json={"title": "할일", "category": self.category.pk},
             user=self.member,
         )
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["category_id"], self.category.id)
+        self.assertEqual(response.json()["category_id"], self.category.pk)
 
     def test_create_other_member_category(self):
         other = Member.objects.create_user(username="user2", password="pass")
         other_category = Category.objects.create(member=other, name="타인 카테고리")
         response = client.post(
             "/",
-            json={"title": "할일", "category": other_category.id},
+            json={"title": "할일", "category": other_category.pk},
             user=self.member,
         )
         self.assertEqual(response.status_code, 404)
@@ -70,6 +72,7 @@ class TodoDetailTest(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.todo = Todo.objects.create(member=self.member, title="할일")
+        assert self.todo is not None
 
     def test_detail(self):
         response = client.get(f"/{self.todo.id}/", user=self.member)
@@ -90,6 +93,7 @@ class TodoUpdateTest(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.todo = Todo.objects.create(member=self.member, title="할일")
+        assert self.todo is not None
 
     def test_update(self):
         response = client.put(
@@ -114,7 +118,7 @@ class TodoUpdateTest(TestCase):
         other_category = Category.objects.create(member=other, name="타인 카테고리")
         response = client.put(
             f"/{self.todo.id}/",
-            json={"title": "수정됨", "category": other_category.id},
+            json={"title": "수정됨", "category": other_category.pk},
             user=self.member,
         )
         self.assertEqual(response.status_code, 404)
@@ -124,6 +128,7 @@ class TodoPatchTest(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.todo = Todo.objects.create(member=self.member, title="할일")
+        assert self.todo is not None
 
     def test_patch_title(self):
         response = client.patch(
@@ -135,7 +140,7 @@ class TodoPatchTest(TestCase):
         self.assertEqual(response.json()["title"], "부분수정")
 
     def test_patch_unset_fields_unchanged(self):
-        response = client.patch(
+        client.patch(
             f"/{self.todo.id}/",
             json={"title": "부분수정"},
             user=self.member,
@@ -155,9 +160,10 @@ class TodoPatchTest(TestCase):
     def test_patch_other_member_category(self):
         other = Member.objects.create_user(username="user2", password="pass")
         other_category = Category.objects.create(member=other, name="타인 카테고리")
+        assert other_category is not None
         response = client.patch(
             f"/{self.todo.id}/",
-            json={"category": other_category.id},
+            json={"category": other_category.pk},
             user=self.member,
         )
         self.assertEqual(response.status_code, 404)
@@ -167,6 +173,7 @@ class TodoDeleteTest(TestCase):
     def setUp(self):
         self.member = Member.objects.create_user(username="user1", password="pass")
         self.todo = Todo.objects.create(member=self.member, title="할일")
+        assert self.todo is not None
 
     def test_delete(self):
         response = client.delete(f"/{self.todo.id}/", user=self.member)

@@ -73,7 +73,30 @@ FK의 `on_delete` 옵션은 모델의 핵심 동작이므로 각각 독립적인
 
 하나의 테스트 메서드는 하나의 동작이나 제약을 검증한다. 여러 관심사를 하나의 테스트에 묶으면 실패 원인 파악이 어려워진다.
 
-### 8. 존재 여부는 .exists()로 확인한다
+### 8. assert문은 setUp의 타입 좁히기 전용으로만 사용한다
+
+파이썬 내장 `assert`는 **오직 `setUp`에서 생성한 픽스처 객체의 타입을 좁히는 용도로만** 사용한다. 그 외 모든 검증(값 비교, 존재 여부, 예외 등)은 `self.assertEqual`, `self.assertTrue` 등 Django `TestCase`의 `assert*` 메서드를 사용한다.
+
+배경: `Model.objects.create()`의 반환 타입은 `Optional`을 포함할 수 있어 정적 분석기가 `.id` 접근을 오류로 보고한다. `assert self.obj is not None`을 `setUp` 마지막에 추가하면 타입 검사기가 이후 코드에서 `obj`가 `None`이 아님을 알 수 있다. `# type: ignore` 사용 금지.
+
+```python
+# 좋음 — setUp에서 타입 좁히기용 assert
+def setUp(self):
+    self.category = Category.objects.create(member=self.member, name="업무")
+    assert self.category is not None
+
+# 좋음 — 테스트 검증은 Django assert* 메서드 사용
+def test_create_with_category(self):
+    response = client.post("/", json={"category": self.category.id}, user=self.member)
+    self.assertEqual(response.status_code, 201)
+
+# 나쁨 — 테스트 검증에 assert 사용
+def test_create_with_category(self):
+    response = client.post("/", json={"category": self.category.id}, user=self.member)
+    assert response.status_code == 201
+```
+
+### 9. 존재 여부는 .exists()로 확인한다
 
 삭제 후 DB에서 제거되었는지 확인할 때 `get()`으로 예외를 유도하지 않고 `filter().exists()`를 사용한다.
 
@@ -81,7 +104,7 @@ FK의 `on_delete` 옵션은 모델의 핵심 동작이므로 각각 독립적인
 self.assertFalse(Todo.objects.filter(id=todo_id).exists())
 ```
 
-### 9. 실패·오류 케이스를 반드시 테스트한다
+### 10. 실패·오류 케이스를 반드시 테스트한다
 
 정상 흐름만 검증하면 제약 위반이나 잘못된 입력에 대한 동작을 보장할 수 없다. 아래 유형은 각각 독립된 테스트로 작성한다.
 
