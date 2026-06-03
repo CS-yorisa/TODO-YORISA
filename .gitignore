@@ -10,3 +10,4 @@ __pycache__/
 db.sqlite3
 
 .claude/agent-memory/
+.claude/settings.local.json
