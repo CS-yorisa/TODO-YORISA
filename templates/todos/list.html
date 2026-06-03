@@ -3,6 +3,8 @@
 {% block title %}내 할 일 | Todo Yorisa{% endblock %}
 
 {% block extra_head %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/todos.css' %}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
@@ -27,7 +29,7 @@
         </ul>
 
         <div class="category-delete-bar" id="category-delete-bar">
-            <form hx-post="/todos/categories/delete/"
+            <form hx-post="/api/todos/categories/delete/"
                   hx-target="#category-list"
                   hx-swap="innerHTML"
                   hx-on::after-request="clearCategorySelection()">
@@ -37,7 +39,7 @@
             </form>
         </div>
 
-        <form class="category-create-form" method="post" action="/todos/categories/create/">
+        <form class="category-create-form" method="post" action="/api/todos/categories/create/">
             {% csrf_token %}
             <input class="category-create-form__input" type="text" name="name" placeholder="새 카테고리" required>
             <button class="category-create-form__btn" type="submit">+ 추가</button>
