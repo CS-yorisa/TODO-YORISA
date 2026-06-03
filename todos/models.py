@@ -47,6 +47,9 @@ class Todo(models.Model):
         default=Status.TODO,
         help_text='할 일의 현재 상태',
     )
+    due_date = models.DateField(
+        null=True, blank=True, help_text='할 일의 기한일 (선택 사항)'
+    )
 
     def __str__(self):
         return self.title

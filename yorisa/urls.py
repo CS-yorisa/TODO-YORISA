@@ -40,6 +40,6 @@ def feature_tab(request, tab):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", index, name="index"),
-    path("api/todos/", include("todos.urls")),
+    path("todos/", include("todos.urls")),
     path("features/<str:tab>/", feature_tab, name="feature_tab"),
 ]

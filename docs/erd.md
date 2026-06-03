@@ -27,6 +27,7 @@ erDiagram
         string title
         text description
         string status "todo | in_progress | done"
+        date due_date "nullable"
     }
     Category }o--|| Member : "member"
     Todo }o--|| Member : "member"

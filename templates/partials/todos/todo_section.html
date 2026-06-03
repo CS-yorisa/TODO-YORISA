@@ -1,0 +1,84 @@
+{% load todo_extras %}
+<input type="hidden" id="current-category-id" value="{{ current_category_id }}">
+
+<div class="todo-add-card">
+    <form
+        hx-post="/todos/create/"
+        hx-target="#todo-list"
+        hx-swap="innerHTML"
+        hx-on::after-request="this.reset(); resetAddCategoryPicker(); resetAddDueDateBtn()">
+        {% csrf_token %}
+        <div class="todo-add-card__row">
+            <span class="todo-add-card__plus">📝</span>
+            <input class="todo-add-card__input" type="text" name="title" placeholder="새 할 일을 입력하세요..." required>
+        </div>
+        <div class="todo-add-card__actions">
+            <div class="todo-add-card__pickers">
+            <div class="category-picker" id="cat-picker-add">
+                <button type="button"
+                        class="todo-card__tag todo-card__tag--btn {% if current_category_id %}{{ current_category_id|color_class }}{% else %}todo-add-cat-btn--empty{% endif %}"
+                        onclick="toggleCatPicker('add', event)">
+                    {% if current_category_id %}{% for cat in categories %}{% if current_category_id == cat.id|stringformat:'s' %}{{ cat.name }}{% endif %}{% endfor %}{% else %}+ 카테고리{% endif %}
+                </button>
+                <div class="category-picker__menu">
+                    <button type="button"
+                            class="category-picker__option category-picker__option--none{% if not current_category_id %} category-picker__option--active{% endif %}"
+                            onclick="setAddCategory('', this)">없음</button>
+                    {% for category in categories %}
+                    <button type="button"
+                            class="category-picker__option {{ category.id|color_class }}{% if current_category_id == category.id|stringformat:'s' %} category-picker__option--active{% endif %}"
+                            data-color-class="{{ category.id|color_class }}"
+                            onclick="setAddCategory('{{ category.id }}', this)">{{ category.name }}</button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="category_id" id="add-category-id" value="{{ current_category_id }}">
+            </div>
+            <div class="due-date-picker-wrap">
+                <button type="button" id="add-due-btn" class="due-badge due-badge--none"
+                        onclick="openDuePicker(this)">
+                    📅 기한 추가
+                </button>
+                <input type="date" id="add-due-date" name="due_date"
+                       class="due-date-input"
+                       onchange="updateAddDueDateBtn(this)">
+            </div>
+            </div>
+            <button class="todo-add-card__submit" type="submit">추가하기</button>
+        </div>
+    </form>
+</div>
+
+<div class="todo-list-header">
+    <div class="status-filter">
+        <button
+            class="status-filter__btn {% if not status_filter %}status-filter__btn--active{% endif %}"
+            hx-get="/todos/?category={{ current_category_id }}"
+            hx-target="#todo-list"
+            hx-swap="innerHTML"
+            onclick="setActiveTab(this)">
+            전체
+        </button>
+        {% for value, label in Status.choices %}
+        <button
+            class="status-filter__btn {% if status_filter == value %}status-filter__btn--active{% endif %}"
+            hx-get="/todos/?category={{ current_category_id }}&status={{ value }}"
+            hx-target="#todo-list"
+            hx-swap="innerHTML"
+            onclick="setActiveTab(this)">
+            {{ label }}
+        </button>
+        {% endfor %}
+    </div>
+    <button id="delete-btn" class="delete-btn"
+            hx-post="/todos/delete/"
+            hx-target="#todo-list"
+            hx-swap="innerHTML"
+            hx-vals="js:{ids: getSelectedIds(), category_id: document.getElementById('current-category-id').value}"
+            hx-on::after-request="clearSelection()">
+        <span id="selected-count">0</span>개 삭제
+    </button>
+</div>
+
+<div id="todo-list">
+    {% include "partials/todos/todo_items.html" %}
+</div>
