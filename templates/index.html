@@ -11,8 +11,13 @@
             Todo Yorisa
         </a>
         <div class="nav__actions">
-            <a href="/accounts/login/" class="btn btn--ghost">로그인</a>
-            <a href="/accounts/signup/" class="btn btn--primary">회원가입</a>
+            {% if user.is_authenticated %}
+                <span class="nav__user">{{ user.first_name|default:user.username }}님</span>
+                <a href="{% url 'accounts:logout' %}" class="btn btn--ghost">로그아웃</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="btn btn--ghost">로그인</a>
+                <a href="{% url 'accounts:signup' %}" class="btn btn--primary">회원가입</a>
+            {% endif %}
         </div>
     </nav>
 </header>
