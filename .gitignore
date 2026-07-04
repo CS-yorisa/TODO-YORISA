@@ -1,5 +1,6 @@
 .venv
 .env
+.idea/
 
 # python
 __pycache__/
@@ -9,3 +10,4 @@ __pycache__/
 db.sqlite3
 
 .claude/agent-memory/
+.claude/settings.local.json

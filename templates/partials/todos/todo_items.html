@@ -1,0 +1,23 @@
+{% if todos %}
+    {% for todo in todos %}
+        {% include "partials/todos/todo_card.html" %}
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state__icon">📋</div>
+        {% if status_filter == 'in_progress' %}
+        <p class="empty-state__text">진행 중인 일이 없어요.</p>
+        {% elif status_filter == 'done' %}
+        <p class="empty-state__text">완료된 일이 없어요.</p>
+        {% else %}
+        <p class="empty-state__text">할 일이 없어요.</p>
+        <span class="empty-state__sub">위에서 새 할 일을 추가해보세요!</span>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if show_oob %}
+<ul id="category-list" class="category-list" hx-swap-oob="outerHTML">
+    {% include "partials/todos/category_list.html" %}
+</ul>
+{% endif %}
