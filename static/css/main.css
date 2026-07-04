@@ -66,13 +66,13 @@ button { cursor: pointer; font: inherit; border: none; background: none; }
 .todo-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg); }
 .todo-item--done { opacity: 0.7; }
 .todo-item--done .todo-text { text-decoration: line-through; }
-.todo-check { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--primary-light); color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.todo-check { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #95D5B2; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 .todo-item:not(.todo-item--done) .todo-check { background: var(--border); color: var(--text-muted); }
 .todo-text { flex: 1; font-size: 0.9rem; }
 .todo-point { font-size: 0.8rem; font-weight: 700; color: var(--accent-dark); }
 .card__footer { margin-top: 16px; }
 .progress-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
-.progress-bar__fill { height: 100%; background: linear-gradient(90deg, var(--primary-light), var(--primary)); border-radius: 99px; transition: width 0.4s; }
+.progress-bar__fill { height: 100%; background: linear-gradient(90deg, #95D5B2, var(--primary)); border-radius: 99px; transition: width 0.4s; }
 .progress-label { font-size: 0.8rem; color: var(--text-muted); }
 
 /* ===== Section Headings ===== */
@@ -102,7 +102,7 @@ button { cursor: pointer; font: inherit; border: none; background: none; }
 .mini-todo { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); background: var(--bg-card); margin-bottom: 8px; }
 .mini-todo:last-child { margin-bottom: 0; }
 .mini-todo__check { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; background: var(--border); color: var(--text-muted); }
-.mini-todo__check.done { background: var(--primary-light); color: #fff; }
+.mini-todo__check.done { background: #95D5B2; color: #fff; }
 .mini-todo__info { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; }
 .mini-todo__tag { font-size: 0.7rem; color: var(--primary); background: #D8F3DC; padding: 1px 8px; border-radius: 99px; width: fit-content; }
 .mini-todo__point { font-size: 0.8rem; font-weight: 700; color: var(--accent-dark); }
