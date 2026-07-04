@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import include, path
 
-from todos.urls import api
+from todos.api import api
 
 FEATURE_TEMPLATES = {
     "todo": "partials/feature_todo.html",
@@ -45,4 +45,5 @@ urlpatterns = [
     path("", index, name="index"),
     path("api/", api.urls),
     path("features/<str:tab>/", feature_tab, name="feature_tab"),
+    path("todos/", include("todos.urls")),
 ]
