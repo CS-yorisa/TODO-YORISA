@@ -1,0 +1,58 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## 언어 규칙
+
+- 모든 문서, 주석, 커밋 메시지는 한국어로 작성한다.
+
+## 프로젝트 개요
+
+Todo 요리사 ("할일을 맛있게 요리해 줍니다") - Django 6, Python 3.14 기반 할일 관리 웹 앱. 패키지 매니저로 uv 사용.
+
+## 주요 명령어
+
+```sh
+uv sync                              # 의존성 설치
+make dev                             # 개발 서버 실행 (uv run python manage.py runserver)
+make shell                           # Django 셸
+make makemigrations                  # 마이그레이션 생성
+make migrate                         # 마이그레이션 적용
+make check                           # ruff 린트 검사
+make check-fix                       # ruff 린트 + 자동 수정
+uv run mypy .                        # 타입 검사
+```
+
+## 아키텍처
+
+- **yorisa/** — Django 프로젝트 설정 (settings, 루트 URL 설정)
+- **accounts/** — 커스텀 유저 모델 (`Member`, `AbstractUser` 상속). `AUTH_USER_MODEL = "accounts.Member"`
+- **todos/** — 핵심 앱: `Todo`, `Category` 모델 및 django-ninja REST API
+- **templates/** — Django 템플릿 + HTMX. `base.html`에서 HTMX CDN 로드
+- **static/** — 정적 파일 (CSS)
+- **docs/** — ERD (`erd.md`), 페이지 레이아웃 (`page-layouts.md`)
+
+### API 계층
+
+API는 **django-ninja**를 사용한다 (DRF 아님). 구조:
+- `todos/urls.py`에서 `NinjaAPI` 인스턴스 생성 후 라우터 마운트
+- `todos/views.py`에서 `@router.get/post/put/patch/delete`로 엔드포인트 정의
+- `todos/schemas.py`에서 Pydantic 스타일 `Schema` 클래스로 요청/응답 검증
+- 루트 URL 설정(`yorisa/urls.py`)에서 `/api/` 경로에 마운트
+
+### 프론트엔드
+
+Django 템플릿 + HTMX로 동적 콘텐츠 처리. 인덱스 페이지에서 HTMX를 통해 기능 탭 파셜(`partials/feature_*.html`)을 `/features/<tab>/` 엔드포인트로 교체.
+
+## 개발 규칙
+
+- API 엔드포인트 개발 시 반드시 **django-ninja**를 사용한다 (DRF 사용 금지).
+  - `Router`로 엔드포인트 정의 → `NinjaAPI` 인스턴스에 마운트
+  - 요청/응답 검증은 `ninja.Schema` (Pydantic 기반) 사용
+  - PATCH용 스키마는 모든 필드를 `Optional`로 선언하고 `exclude_unset=True`로 처리
+
+## 설정
+
+- `django-environ`으로 환경변수 관리, 프로젝트 루트의 `.env` 파일에서 로드
+- `SECRET_KEY`, `DEBUG`는 `.env`에서 읽음
+- DB: SQLite (개발), PostgreSQL (운영 예정)
