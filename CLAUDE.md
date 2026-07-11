@@ -30,7 +30,7 @@ uv run mypy .                        # 타입 검사
 - **todos/** — 핵심 앱: `Todo`, `Category` 모델 및 django-ninja REST API
 - **templates/** — Django 템플릿 + HTMX. `base.html`에서 HTMX CDN 로드
 - **static/** — 정적 파일 (CSS)
-- **docs/** — ERD (`erd.md`), 페이지 레이아웃 (`page-layouts.md`)
+- **docs/** — ERD (`erd.md`), 페이지 레이아웃 (`page-layouts.md`), 템플릿 작성 규칙 (`template-conventions.md`)
 
 ### API 계층
 
@@ -43,6 +43,8 @@ API는 **django-ninja**를 사용한다 (DRF 아님). 구조:
 ### 프론트엔드
 
 Django 템플릿 + HTMX로 동적 콘텐츠 처리. 인덱스 페이지에서 HTMX를 통해 기능 탭 파셜(`partials/feature_*.html`)을 `/features/<tab>/` 엔드포인트로 교체.
+
+템플릿 작성 시 속성 줄바꿈, `{% load %}` 위치, JS 배치, BEM 네이밍 등은 [docs/template-conventions.md](docs/template-conventions.md)를 따른다.
 
 ## 개발 규칙
 

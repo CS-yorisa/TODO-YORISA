@@ -4,7 +4,8 @@
         hx-get="/api/todos/"
         hx-target="#todo-section"
         hx-swap="innerHTML"
-        onclick="setActiveCategory(this)">
+        onclick="setActiveCategory(this)"
+    >
         전체
         <span class="category-list__count">{{ total_count }}</span>
     </button>
@@ -16,21 +17,28 @@
         hx-get="/api/todos/?category={{ category.id }}"
         hx-target="#todo-section"
         hx-swap="innerHTML"
-        onclick="setActiveCategory(this)">
+        onclick="setActiveCategory(this)"
+    >
         {{ category.name }}
         <span class="category-list__count">{{ category.todo_count }}</span>
     </button>
     <div class="category-list__item--edit">
-        <form class="category-edit-form"
-              hx-post="/api/todos/categories/{{ category.id }}/update/"
-              hx-target="#category-list"
-              hx-swap="innerHTML"
-              hx-on::after-request="clearCategorySelection()">
-            {% csrf_token %}
-            <input class="category-edit-input" type="text" name="name"
-                   value="{{ category.name }}" data-original="{{ category.name }}"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
-                   onblur="if(this.value.trim()&&this.value.trim()!==this.dataset.original){this.form.requestSubmit()}">
+        <form
+            class="category-edit-form"
+            hx-post="/api/todos/categories/{{ category.id }}/update/"
+            hx-target="#category-list"
+            hx-swap="innerHTML"
+            hx-on::after-request="clearCategorySelection()"
+        >
+            <input
+                class="category-edit-input"
+                type="text"
+                name="name"
+                value="{{ category.name }}"
+                data-original="{{ category.name }}"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                onblur="if(this.value.trim()&&this.value.trim()!==this.dataset.original){this.form.requestSubmit()}"
+            >
         </form>
         <input type="checkbox" class="category-edit-check" data-id="{{ category.id }}" onchange="onCategoryCheckChange()">
     </div>
