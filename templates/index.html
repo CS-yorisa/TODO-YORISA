@@ -90,10 +90,7 @@
                 <div class="feature-tabs__nav" role="tablist">
                     <button
                         class="tab-btn tab-btn--active"
-                        hx-get="/features/todo/"
-                        hx-target="#feature-content"
-                        hx-swap="innerHTML"
-                        hx-indicator="#feature-spinner"
+                        data-tab="todo"
                         onclick="setActiveTab(this)"
                         role="tab"
                     >
@@ -101,10 +98,7 @@
                     </button>
                     <button
                         class="tab-btn"
-                        hx-get="/features/points/"
-                        hx-target="#feature-content"
-                        hx-swap="innerHTML"
-                        hx-indicator="#feature-spinner"
+                        data-tab="points"
                         onclick="setActiveTab(this)"
                         role="tab"
                     >
@@ -112,10 +106,7 @@
                     </button>
                     <button
                         class="tab-btn"
-                        hx-get="/features/shop/"
-                        hx-target="#feature-content"
-                        hx-swap="innerHTML"
-                        hx-indicator="#feature-spinner"
+                        data-tab="shop"
                         onclick="setActiveTab(this)"
                         role="tab"
                     >
@@ -124,9 +115,16 @@
                 </div>
 
                 <div class="feature-tabs__content">
-                    <span id="feature-spinner" class="htmx-indicator spinner">로딩 중...</span>
-                    <div id="feature-content">
-                        {% include "partials/feature_todo.html" %}
+                    <div id="feature-content" data-active-panel="todo">
+                        <div class="feature-panel-wrap" data-panel="todo">
+                            {% include "components/index/feature_todo.html" %}
+                        </div>
+                        <div class="feature-panel-wrap feature-panel-wrap--hidden" data-panel="points">
+                            {% include "components/index/feature_points.html" %}
+                        </div>
+                        <div class="feature-panel-wrap feature-panel-wrap--hidden" data-panel="shop">
+                            {% include "components/index/feature_shop.html" %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -175,11 +173,9 @@
         <span class="footer__copy">© 2026 Todo Yorisa. All rights reserved.</span>
     </div>
 </footer>
+{% endblock %}
 
-<script>
-function setActiveTab(el) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-btn--active'));
-    el.classList.add('tab-btn--active');
-}
-</script>
+{% block extra_script %}
+{% load static %}
+<script src="{% static 'js/index.js' %}"></script>
 {% endblock %}

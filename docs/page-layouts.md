@@ -11,7 +11,7 @@
 - URL: `/`
 - 뷰: `yorisa/urls.py` > `index()`
 - 템플릿: `templates/index.html`
-- 파셜: `templates/partials/feature_todo.html`, `feature_points.html`, `feature_shop.html`
+- 파셜: `templates/components/index/feature_todo.html`, `feature_points.html`, `feature_shop.html`
 
 ### 섹션 구성
 
@@ -19,20 +19,14 @@
 |------|------|------|
 | 1 | Header | 로고, 로그인 상태에 따라 로그인/회원가입 또는 사용자 이름/로그아웃 표시 (sticky) |
 | 2 | Hero | 서비스 소개 문구 + TODO 미리보기 카드 |
-| 3 | Features | HTMX 탭으로 전환되는 3가지 기능 소개 (할 일 관리, 포인트 시스템, 재료 상점) |
+| 3 | Features | 클라이언트 사이드 JS 탭으로 전환되는 3가지 기능 소개 (할 일 관리, 포인트 시스템, 재료 상점) |
 | 4 | Stats | 서비스 통계 수치 4개 (완료된 할 일, 적립된 포인트, 구매된 재료, 활성 사용자) |
 | 5 | CTA | 회원가입 유도 + 첫 가입 100p 혜택 안내 |
 | 6 | Footer | 로고, 저작권 표시 |
 
-### HTMX 사용
+### 탭 전환
 
-| 동작 | 엔드포인트 | 파셜 템플릿 |
-|------|-----------|-------------|
-| 할 일 관리 탭 클릭 | `GET /features/todo/` | `partials/feature_todo.html` |
-| 포인트 시스템 탭 클릭 | `GET /features/points/` | `partials/feature_points.html` |
-| 재료 상점 탭 클릭 | `GET /features/shop/` | `partials/feature_shop.html` |
-
-초기 렌더링 시 `feature_todo.html`이 `{% include %}`로 포함됩니다. 탭 클릭 시 `hx-target="#feature-content"`, `hx-swap="innerHTML"`로 교체됩니다.
+세 파셜(`feature_todo.html`, `feature_points.html`, `feature_shop.html`)을 모두 `{% include %}`로 렌더링 시 함께 포함하고, `static/js/index.js`의 `setActiveTab()`이 `data-panel` 속성을 기준으로 `.feature-panel-wrap--hidden` 클래스를 토글해 화면에 보이는 패널만 전환합니다. 서버 왕복 없이 클라이언트에서만 처리됩니다 (HTMX 미사용).
 
 ---
 
@@ -80,16 +74,13 @@
 
 ## 기능 탭 파셜
 
-메인 페이지의 HTMX 탭에서 로드되는 파셜 템플릿입니다. 독립 페이지가 아닙니다.
-
-- URL: `/features/<str:tab>/`
-- 뷰: `yorisa/urls.py` > `feature_tab()`
+메인 페이지 Features 섹션에서 클라이언트 사이드 탭 전환으로 표시되는 파셜 템플릿입니다. 독립 페이지가 아니며 별도 URL/뷰 없이 `index()` 렌더링 시 한 번에 모두 포함됩니다.
 
 | 탭 키 | 파셜 템플릿 | 설명 |
 |-------|------------|------|
-| `todo` | `templates/partials/feature_todo.html` | 스마트 할 일 관리 소개 + 미니 TODO 카드 |
-| `points` | `templates/partials/feature_points.html` | 포인트 시스템 소개 + 포인트 히스토리 카드 |
-| `shop` | `templates/partials/feature_shop.html` | 재료 상점 소개 + 상점 그리드 카드 |
+| `todo` | `templates/components/index/feature_todo.html` | 스마트 할 일 관리 소개 + 미니 TODO 카드 |
+| `points` | `templates/components/index/feature_points.html` | 포인트 시스템 소개 + 포인트 히스토리 카드 |
+| `shop` | `templates/components/index/feature_shop.html` | 재료 상점 소개 + 상점 그리드 카드 |
 
 ---
 
