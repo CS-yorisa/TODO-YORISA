@@ -42,9 +42,9 @@ API는 **django-ninja**를 사용한다 (DRF 아님). 구조:
 
 ### 프론트엔드
 
-Django 템플릿 + HTMX로 동적 콘텐츠 처리. 인덱스 페이지에서 HTMX를 통해 기능 탭 파셜(`partials/feature_*.html`)을 `/features/<tab>/` 엔드포인트로 교체.
+Django 템플릿 + HTMX로 동적 콘텐츠 처리. `templates/index.html`을 서비스 진입점으로 삼고, 각 앱 페이지는 `templates/<app>/`(예: `templates/todos/`)에서 관리한다. 재사용 조각 템플릿(파셜/컴포넌트)은 해당 앱에서만 쓰이면 `templates/<app>/components/`, 여러 앱이 공유하면 `templates/components/`, `index.html` 전용이면 `templates/components/index/`에 둔다.
 
-템플릿 작성 시 속성 줄바꿈, `{% load %}` 위치, JS 배치, BEM 네이밍 등은 [docs/template-conventions.md](docs/template-conventions.md)를 따른다.
+템플릿 작성 시 파일 배치, 속성 줄바꿈, `{% load %}` 위치, JS 배치, BEM 네이밍 등은 [docs/template-conventions.md](docs/template-conventions.md)를 따른다.
 
 ## 개발 규칙
 

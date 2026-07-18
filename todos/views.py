@@ -79,9 +79,9 @@ def todo_list(request):
     ctx = _context(category_id, status_filter)
     hx_target = request.headers.get("HX-Target", "")
     if hx_target == "todo-list":
-        return render(request, "partials/todos/todo_items.html", ctx)
+        return render(request, "todos/components/todo_items.html", ctx)
     elif request.headers.get("HX-Request"):
-        return render(request, "partials/todos/todo_section.html", ctx)
+        return render(request, "todos/components/todo_section.html", ctx)
     return render(request, "todos/list.html", ctx)
 
 
@@ -90,7 +90,7 @@ def todo_create(request):
     category_id = request.POST.get("category_id", "")
     return render(
         request,
-        "partials/todos/todo_items.html",
+        "todos/components/todo_items.html",
         {**_context(category_id), "show_oob": True},
     )
 
@@ -99,7 +99,7 @@ def todo_create(request):
 def todo_status_update(request, todo_id):
     return render(
         request,
-        "partials/todos/todo_card.html",
+        "todos/components/todo_card.html",
         {
             "todo": _todo_by_id(todo_id),
             "Status": Todo.Status,
@@ -112,7 +112,7 @@ def todo_status_update(request, todo_id):
 def todo_category_update(request, todo_id):
     return render(
         request,
-        "partials/todos/todo_card.html",
+        "todos/components/todo_card.html",
         {
             "todo": _todo_by_id(todo_id),
             "Status": Todo.Status,
@@ -126,7 +126,7 @@ def todo_delete(request):
     category_id = request.POST.get("category_id", "")
     return render(
         request,
-        "partials/todos/todo_items.html",
+        "todos/components/todo_items.html",
         {**_context(category_id), "show_oob": True},
     )
 
@@ -135,7 +135,7 @@ def todo_delete(request):
 def todo_due_date_update(request, todo_id):
     return render(
         request,
-        "partials/todos/todo_card.html",
+        "todos/components/todo_card.html",
         {
             "todo": _todo_by_id(todo_id),
             "Status": Todo.Status,
@@ -161,7 +161,7 @@ def _category_list_context():
 def category_update(request, category_id):
     return render(
         request,
-        "partials/todos/category_list.html",
+        "todos/components/category_list.html",
         _category_list_context(),
     )
 
@@ -170,6 +170,6 @@ def category_update(request, category_id):
 def category_delete(request):
     return render(
         request,
-        "partials/todos/category_list.html",
+        "todos/components/category_list.html",
         _category_list_context(),
     )

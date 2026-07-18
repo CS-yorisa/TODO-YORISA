@@ -5,15 +5,23 @@
 
 ## 1. 파일 배치
 
-| 위치                        | 용도                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| `templates/*.html`          | 최상위 페이지 (`{% extends "base.html" %}` 사용)                               |
-| `templates/accounts/`       | 계정 관련 페이지                                                               |
-| `templates/todos/`          | Todo 관련 페이지                                                               |
-| `templates/partials/`       | HTMX 응답으로 반환되는 조각 템플릿. `{% extends %}` 없이 순수 HTML 조각만 포함 |
-| `templates/partials/todos/` | Todo 도메인 파셜 (재사용 카드/리스트 단위)                                     |
+| 위치                          | 용도                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `templates/index.html`        | 서비스 진입점 페이지 (`{% extends "base.html" %}` 사용)                        |
+| `templates/<app>/`            | 앱별 페이지. 앱 이름과 동일한 폴더명 사용 (`templates/accounts/`, `templates/todos/`) |
+| `templates/<app>/components/` | 해당 앱에서만 쓰이는 조각 템플릿(파셜/컴포넌트). `{% extends %}` 없이 순수 HTML 조각만 포함 |
+| `templates/components/`       | 두 개 이상의 앱에서 공통으로 쓰이는 조각 템플릿                                |
+| `templates/components/index/` | `index.html` 전용 조각 템플릿 (index는 특정 앱에 속하지 않으므로 하위 폴더로 구분) |
 
-파셜은 도메인별 하위 폴더로 묶습니다. 새 도메인 파셜이 2개 이상 생기면 `partials/<domain>/` 폴더를 만듭니다.
+페이지는 기본적으로 `index.html`을 진입점으로 삼되, 각 기능은 앱 이름과 같은 폴더(`templates/<app>/`)에서 관리합니다.
+
+페이지 내 일부분(HTMX 파셜, 재사용 카드/리스트 등)은 다음 기준으로 위치를 정합니다.
+
+- 특정 앱에서만 쓰인다 → `templates/<app>/components/`
+- 여러 앱에서 공통으로 쓰인다 → `templates/components/`
+- `index.html`에서만 쓰인다 → `templates/components/index/` (index는 앱 폴더가 아니므로 별도 취급)
+
+예시: `todos` 앱 전용 조각은 `templates/todos/components/todo_card.html`처럼 둡니다.
 
 ## 2. `{% load %}` 위치
 
