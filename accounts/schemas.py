@@ -1,28 +1,35 @@
-from datetime import datetime
-
 from ninja import Schema
-from pydantic import EmailStr
 
 
-class MemberSignupIn(Schema):
+class SignupIn(Schema):
     username: str
-    email: EmailStr
+    email: str
     password: str
-    password_confirm: str
-    first_name: str = ""
-    last_name: str = ""
 
 
-class MemberUpdateIn(Schema):
-    first_name: str | None = None
-    last_name: str | None = None
-    email: EmailStr | None = None
+class LoginIn(Schema):
+    username: str
+    password: str
+
+
+class RefreshIn(Schema):
+    refresh: str
 
 
 class MemberOut(Schema):
     id: int
     username: str
-    email: str | None
-    first_name: str
-    last_name: str
-    date_joined: datetime
+    email: str
+
+
+class TokenOut(Schema):
+    access: str
+    refresh: str
+
+
+class AccessOut(Schema):
+    access: str
+
+
+class ErrorOut(Schema):
+    detail: str

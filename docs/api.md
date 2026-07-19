@@ -4,34 +4,38 @@ django-ninja 기반 REST API. 루트 URL `/api/`에 마운트된다.
 
 ## 인증
 
-모든 엔드포인트는 로그인된 사용자(`request.user`)의 데이터만 접근한다.
+Todos API 등 기존 엔드포인트는 로그인된 사용자(`request.user`)의 데이터만 접근한다(세션 기반, 현재 JWT 미적용).
 
-## Accounts
+## Auth
 
-기본 경로: `/api/accounts/`
+기본 경로: `/api/auth/`
+
+PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 키는 `SECRET_KEY`를 재사용한다.
+
+- Access 토큰 수명: 30분
+- Refresh 토큰 수명: 7일
+
+향후 보호가 필요한 API에는 `accounts.auth.JWTAuth`(`HttpBearer` 구현체)를 `Router(auth=JWTAuth())` 형태로 적용할 수 있다. `Authorization: Bearer <access>` 헤더로 인증한다.
 
 ### 스키마
 
 | 클래스 | 용도 |
 |--------|------|
-| `MemberSignupIn` | 회원가입(POST) 요청 바디 |
-| `MemberUpdateIn` | 정보 수정(PATCH) 요청 바디 — 모든 필드 Optional (이름/이메일만 수정 가능, 비밀번호 변경은 별도 플로우) |
-| `MemberOut` | 응답 (id, username, email, first_name, last_name, date_joined — password 미포함) |
+| `SignupIn` | 회원가입 요청 바디 (username, email, password) |
+| `LoginIn` | 로그인 요청 바디 (username, password) |
+| `RefreshIn` | 토큰 갱신 요청 바디 (refresh) |
+| `MemberOut` | 회원가입 응답 (id, username, email) |
+| `TokenOut` | 로그인 응답 (access, refresh) |
+| `AccessOut` | 토큰 갱신 응답 (access) |
+| `ErrorOut` | 에러 응답 (detail) |
 
 ### 엔드포인트
 
-| 메서드 | 경로 | 인증 | 응답 코드 | 설명 |
-|--------|------|------|-----------|------|
-| POST | `/signup/` | 불필요 | 201 / 400 | 회원가입. 비밀번호 확인 불일치, 아이디/이메일 중복 시 400 |
-| GET | `/me/` | 필요 | 200 | 내 정보 조회 |
-| PATCH | `/me/` | 필요 | 200 / 400 | 내 정보 수정 (이메일 중복 시 400) |
-| DELETE | `/me/` | 필요 | 204 | 회원 탈퇴 (soft-delete) |
-
-### 회원 탈퇴 정책
-
-탈퇴는 `is_active=False`로 바꾸는 soft-delete다. 이때 `username`/`email`을 `NULL`로 비운다 — Django의 `USERNAME_FIELD`(`username`)는 전역 `unique=True`가 필수라 값을 남겨두면 동일 아이디 재가입이 막히기 때문. NULL은 unique 제약에서 제외되므로, 탈퇴한 계정과 같은 username/email로 재가입이 가능하다. 단, 재가입은 완전히 새로운 `Member` row(새 PK)로 생성되며 탈퇴 전 소유했던 `Todo`/`Category` 데이터와는 연결되지 않는다.
-
-`email`은 값이 비어있지 않고(`""` 아님) NULL도 아닌 경우에만 유일성을 검사한다(조건부 unique constraint) — 이메일 없이 생성된 계정끼리는 충돌하지 않는다.
+| 메서드 | 경로 | 응답 코드 | 설명 |
+|--------|------|-----------|------|
+| POST | `/signup/` | 201 | 회원가입. username 또는 email 중복 시 409, 이메일 형식 오류·비밀번호 정책 위반 시 400 |
+| POST | `/login/` | 200 | 로그인, access/refresh 토큰 발급. 인증 실패 시 401 |
+| POST | `/refresh/` | 200 | refresh 토큰으로 access 토큰 재발급. 토큰 무효/만료 시 401 |
 
 ## Todos
 

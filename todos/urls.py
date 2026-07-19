@@ -1,11 +1,13 @@
 from ninja import NinjaAPI
 from django.urls import path
 
+from accounts.api import router as auth_router
 from todos.views import router
 from . import views
 
 api = NinjaAPI()
 api.add_router("/todos/", router)
+api.add_router("/auth/", auth_router)
 
 urlpatterns = [
     path('', views.todo_list, name='todo_list'),

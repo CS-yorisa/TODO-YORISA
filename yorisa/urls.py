@@ -19,10 +19,7 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import include, path
 
-from accounts.views import router as accounts_router
 from todos.urls import api
-
-api.add_router("/accounts/", accounts_router)
 
 FEATURE_TEMPLATES = {
     "todo": "partials/feature_todo.html",
