@@ -5,9 +5,7 @@ from typing import Optional
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from todos.api import todo_create_api, todo_delete_api, todo_list_api, todo_patch_api
-from todos.models import Category, Todo
-from todos.schemas import TodoCreate, TodoPatch
+from todos.models import Todo
 
 
 @dataclass
@@ -71,21 +69,6 @@ def _context(category_id="", status_filter=""):
     }
 
 
-def _todo_list_context(request, category_id="", status_filter=""):
-    todos = todo_list_api(request, status=status_filter or None)
-    if category_id:
-        todos = todos.filter(category_id=category_id)
-    categories = Category.objects.filter(member=request.user)
-    return {
-        "todos": todos,
-        "categories": categories,
-        "total_count": Todo.objects.filter(member=request.user).count(),
-        "status_filter": status_filter,
-        "current_category_id": category_id,
-        "Status": Todo.Status,
-    }
-
-
 def _todo_by_id(todo_id):
     return next((t for t in _TODOS if t.id == todo_id), _TODOS[0])
 
@@ -93,7 +76,7 @@ def _todo_by_id(todo_id):
 def todo_list(request):
     category_id = request.GET.get("category", "")
     status_filter = request.GET.get("status", "")
-    ctx = _todo_list_context(request, category_id, status_filter)
+    ctx = _context(category_id, status_filter)
     hx_target = request.headers.get("HX-Target", "")
     if hx_target == "todo-list":
         return render(request, "todos/components/todo_items.html", ctx)
@@ -105,73 +88,59 @@ def todo_list(request):
 @require_POST
 def todo_create(request):
     category_id = request.POST.get("category_id", "")
-    due_date = request.POST.get("due_date", "")
-    payload = TodoCreate(
-        title=request.POST.get("title", ""),
-        category=int(category_id) if category_id else None,
-        due_date=due_date or None,
-    )
-    todo_create_api(request, payload)
     return render(
         request,
         "todos/components/todo_items.html",
-        {**_todo_list_context(request, category_id), "show_oob": True},
+        {**_context(category_id), "show_oob": True},
     )
-
-
-def _todo_card_context(request, todo_id):
-    todo = Todo.objects.get(id=todo_id, member=request.user)
-    return {
-        "todo": todo,
-        "Status": Todo.Status,
-        "categories": Category.objects.filter(member=request.user),
-    }
 
 
 @require_POST
 def todo_status_update(request, todo_id):
-    payload = TodoPatch(status=request.POST.get("status"))
-    todo_patch_api(request, todo_id, payload)
     return render(
         request,
         "todos/components/todo_card.html",
-        _todo_card_context(request, todo_id),
+        {
+            "todo": _todo_by_id(todo_id),
+            "Status": Todo.Status,
+            "categories": _CATEGORIES,
+        },
     )
 
 
 @require_POST
 def todo_category_update(request, todo_id):
-    category_id = request.POST.get("category_id", "")
-    payload = TodoPatch(category=int(category_id) if category_id else None)
-    todo_patch_api(request, todo_id, payload)
     return render(
         request,
         "todos/components/todo_card.html",
-        _todo_card_context(request, todo_id),
+        {
+            "todo": _todo_by_id(todo_id),
+            "Status": Todo.Status,
+            "categories": _CATEGORIES,
+        },
     )
 
 
 @require_POST
 def todo_delete(request):
     category_id = request.POST.get("category_id", "")
-    for todo_id in request.POST.getlist("ids"):
-        todo_delete_api(request, int(todo_id))
     return render(
         request,
         "todos/components/todo_items.html",
-        {**_todo_list_context(request, category_id), "show_oob": True},
+        {**_context(category_id), "show_oob": True},
     )
 
 
 @require_POST
 def todo_due_date_update(request, todo_id):
-    due_date = request.POST.get("due_date", "")
-    payload = TodoPatch(due_date=due_date or None)
-    todo_patch_api(request, todo_id, payload)
     return render(
         request,
         "todos/components/todo_card.html",
-        _todo_card_context(request, todo_id),
+        {
+            "todo": _todo_by_id(todo_id),
+            "Status": Todo.Status,
+            "categories": _CATEGORIES,
+        },
     )
 
 
