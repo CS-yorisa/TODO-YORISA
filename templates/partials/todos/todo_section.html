@@ -3,7 +3,7 @@
 
 <div class="todo-add-card">
     <form
-        hx-post="/api/todos/create/"
+        hx-post="/todos/create/"
         hx-target="#todo-list"
         hx-swap="innerHTML"
         hx-on::after-request="this.reset(); resetAddCategoryPicker(); resetAddDueDateBtn()">
@@ -52,7 +52,7 @@
     <div class="status-filter">
         <button
             class="status-filter__btn {% if not status_filter %}status-filter__btn--active{% endif %}"
-            hx-get="/api/todos/?category={{ current_category_id }}"
+            hx-get="/todos/?category={{ current_category_id }}"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             onclick="setActiveTab(this)">
@@ -61,7 +61,7 @@
         {% for value, label in Status.choices %}
         <button
             class="status-filter__btn {% if status_filter == value %}status-filter__btn--active{% endif %}"
-            hx-get="/api/todos/?category={{ current_category_id }}&status={{ value }}"
+            hx-get="/todos/?category={{ current_category_id }}&status={{ value }}"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             onclick="setActiveTab(this)">
@@ -70,7 +70,7 @@
         {% endfor %}
     </div>
     <button id="delete-btn" class="delete-btn"
-            hx-post="/api/todos/delete/"
+            hx-post="/todos/delete/"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             hx-vals="js:{ids: getSelectedIds(), category_id: document.getElementById('current-category-id').value}"

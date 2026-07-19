@@ -9,7 +9,9 @@
         <h1 class="auth-title">회원가입</h1>
         <p class="auth-desc">계정을 만들고 할 일 관리를 시작하세요!</p>
 
-        <form method="post" class="auth-form">
+        <p id="signup-error" class="form-error" style="display: none;"></p>
+
+        <form id="signup-form" class="auth-form">
             {% csrf_token %}
 
             <div class="form-row">
@@ -51,4 +53,47 @@
         </p>
     </div>
 </div>
+
+<script>
+document.getElementById('signup-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const errorEl = document.getElementById('signup-error');
+    errorEl.style.display = 'none';
+
+    if (form.password.value !== form.password_confirm.value) {
+        errorEl.textContent = '비밀번호가 일치하지 않습니다.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    const payload = {
+        username: form.username.value,
+        email: form.email.value,
+        password: form.password.value,
+        password_confirm: form.password_confirm.value,
+        first_name: form.first_name.value,
+        last_name: form.last_name.value,
+    };
+
+    const response = await fetch('/api/accounts/signup/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+        window.location.href = "{% url 'accounts:login' %}";
+        return;
+    }
+
+    const data = await response.json().catch(() => ({}));
+    errorEl.textContent = data.detail || '회원가입에 실패했습니다.';
+    errorEl.style.display = 'block';
+});
+</script>
 {% endblock %}

@@ -4,11 +4,11 @@
 erDiagram
     Member {
         int id PK
-        string username
+        string username "nullable, unique(non-null)"
         string password
         string first_name
         string last_name
-        string email
+        string email "nullable, unique(non-empty)"
         bool is_staff
         bool is_active
         bool is_superuser
