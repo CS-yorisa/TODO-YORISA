@@ -27,10 +27,10 @@ HTMX는 CDN을 통해 `templates/base.html`에서 전역으로 로드합니다.
 | `{% block extra_head %}` | 페이지별 추가 head 태그 |
 | `{% block body %}` | 페이지 본문 전체 |
 
-### partials 디렉토리
+### components 디렉토리
 
-HTMX 요청에 대한 응답으로 반환되는 HTML 조각(파셜)을 `templates/partials/`에 보관합니다.
-파셜 템플릿은 `{% extends %}` 없이 순수 HTML 조각만 포함합니다.
+HTMX 요청에 대한 응답으로 반환되는 HTML 조각(파셜)은 `templates/<app>/components/`(해당 앱 전용) 또는 `templates/components/`(여러 앱 공용)에 보관합니다.
+조각 템플릿은 `{% extends %}` 없이 순수 HTML 조각만 포함합니다. 자세한 배치 기준은 [template-conventions.md](template-conventions.md)를 참고합니다.
 
 ## 3. 주요 HTMX 속성
 
@@ -73,7 +73,7 @@ HTMX는 요청 중 `htmx-request` 클래스를 자동으로 토글합니다. CSS
 ```python
 def my_partial(request):
     context = {"items": Item.objects.all()}
-    return render(request, "partials/my_partial.html", context)
+    return render(request, "todos/components/my_partial.html", context)
 ```
 
 ## 5. Static 파일 설정
@@ -94,6 +94,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 ## 6. 새로운 HTMX 파셜 추가 방법
 
-1. `templates/partials/`에 HTML 파일 생성 (예: `partials/my_section.html`)
+1. 해당 앱 전용이면 `templates/<app>/components/`, 여러 앱 공용이면 `templates/components/`에 HTML 파일 생성 (예: `todos/components/my_section.html`)
 2. `yorisa/urls.py` (또는 앱 `urls.py`)에 뷰 함수 및 URL 패턴 추가
 3. 기존 템플릿에서 `hx-get`, `hx-target`, `hx-swap` 속성으로 연결

@@ -1,4 +1,3 @@
-from ninja import NinjaAPI
 from django.urls import path
 
 from accounts.api import router as auth_router
