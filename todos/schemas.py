@@ -1,3 +1,5 @@
+from datetime import date
+
 from ninja import Schema
 
 
@@ -6,6 +8,7 @@ class TodoCreate(Schema):
     description: str = ""
     status: str = "todo"
     category: int | None = None
+    due_date: date | None = None
 
 
 class TodoPatch(Schema):
@@ -13,6 +16,7 @@ class TodoPatch(Schema):
     description: str | None = None
     status: str | None = None
     category: int | None = None
+    due_date: date | None = None
 
 
 class TodoList(Schema):
@@ -22,3 +26,4 @@ class TodoList(Schema):
     status: str
     category_id: int | None
     member_id: int | None
+    due_date: date | None
