@@ -1,6 +1,12 @@
 {% load todo_extras %}
 <div class="todo-card {% if todo.status == 'done' %}todo-card--done{% endif %}" id="todo-card-{{ todo.id }}">
-    <button class="todo-card__select" data-id="{{ todo.id }}" onclick="toggleSelect(this)"></button>
+    <button
+        class="todo-card__select {% if todo.status == 'done' %}todo-card__select--selected{% endif %}"
+        hx-post="/api/todos/{{ todo.id }}/status/"
+        hx-target="#todo-card-{{ todo.id }}"
+        hx-swap="outerHTML"
+        hx-vals='{"status": "{% if todo.status == "done" %}todo{% else %}done{% endif %}"}'
+    ></button>
     <div class="todo-card__body">
         <span class="todo-card__title">{{ todo.title }}</span>
         <div class="category-picker" id="cat-picker-{{ todo.id }}">

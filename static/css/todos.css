@@ -60,10 +60,7 @@
 .todo-card__select:hover { border-color: var(--accent); }
 .todo-card__select--selected { background: var(--accent); border-color: var(--accent); }
 .todo-card__select--selected::after { content: '✓'; }
-.todo-card--selected { background: #FFF8F0; border-color: #F4A261; }
 .todo-list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.delete-btn { display: none; align-items: center; gap: 6px; padding: 6px 14px; background: #FEE2E2; color: #DC2626; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; border: none; cursor: pointer; transition: background 0.15s; }
-.delete-btn:hover { background: #FECACA; }
 .todo-card__body { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
 .todo-card__title { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .todo-card__tag { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }

@@ -74,17 +74,6 @@
         </button>
         {% endfor %}
     </div>
-    <button
-        id="delete-btn"
-        class="delete-btn"
-        hx-post="/api/todos/delete/"
-        hx-target="#todo-list"
-        hx-swap="innerHTML"
-        hx-vals="js:{ids: getSelectedIds(), category_id: document.getElementById('current-category-id').value}"
-        hx-on::after-request="clearSelection()"
-    >
-        <span id="selected-count">0</span>개 삭제
-    </button>
 </div>
 
 <div id="todo-list">

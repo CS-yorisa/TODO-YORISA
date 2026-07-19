@@ -1,38 +1,3 @@
-const selectedIds = new Set();
-
-function toggleSelect(btn) {
-    const card = btn.closest('.todo-card');
-    const id = btn.dataset.id;
-    if (selectedIds.has(id)) {
-        selectedIds.delete(id);
-        btn.classList.remove('todo-card__select--selected');
-        card.classList.remove('todo-card--selected');
-    } else {
-        selectedIds.add(id);
-        btn.classList.add('todo-card__select--selected');
-        card.classList.add('todo-card--selected');
-    }
-    updateDeleteBtn();
-}
-
-function updateDeleteBtn() {
-    const btn = document.getElementById('delete-btn');
-    if (!btn) return;
-    document.getElementById('selected-count').textContent = selectedIds.size;
-    btn.style.display = selectedIds.size > 0 ? 'flex' : 'none';
-}
-
-function getSelectedIds() {
-    return Array.from(selectedIds).join(',');
-}
-
-function clearSelection() {
-    selectedIds.clear();
-    document.querySelectorAll('.todo-card__select--selected').forEach(el => el.classList.remove('todo-card__select--selected'));
-    document.querySelectorAll('.todo-card--selected').forEach(el => el.classList.remove('todo-card--selected'));
-    updateDeleteBtn();
-}
-
 function toggleCategoryEditMode() {
     const sidebar = document.querySelector('.category-sidebar');
     const btn = document.getElementById('category-edit-toggle');
