@@ -1,6 +1,6 @@
 {% if todos %}
     {% for todo in todos %}
-        {% include "partials/todos/todo_card.html" %}
+        {% include "todos/components/todo_card.html" %}
     {% endfor %}
 {% else %}
     <div class="empty-state">
@@ -18,6 +18,6 @@
 
 {% if show_oob %}
 <ul id="category-list" class="category-list" hx-swap-oob="outerHTML">
-    {% include "partials/todos/category_list.html" %}
+    {% include "todos/components/category_list.html" %}
 </ul>
 {% endif %}

@@ -15,7 +15,7 @@ templates 디렉토리와 urls.py 파일을 분석하여 `docs/page-layouts.md`�
 다음 파일들을 모두 읽어서 현재 페이지 정보를 수집한다.
 
 1. **URL 설정 파일**: 프로젝트 레벨 `yorisa/urls.py`와 각 앱의 `urls.py`를 읽어 등록된 URL 패턴을 파악한다.
-2. **페이지 템플릿**: `templates/` 하위의 모든 `.html` 파일을 읽는다. (`partials/` 디렉토리의 파셜 템플릿 포함)
+2. **페이지 템플릿**: `templates/` 하위의 모든 `.html` 파일을 읽는다. (`templates/<app>/components/`, `templates/components/` 디렉토리의 파셜 템플릿 포함)
 3. **CSS 파일**: `static/css/` 하위의 CSS 파일에서 CSS 변수(`:root`)와 미디어 쿼리 브레이크포인트를 파악한다.
 
 ### 2단계: 페이지별 정보 분석
@@ -90,5 +90,5 @@ templates 디렉토리와 urls.py 파일을 분석하여 `docs/page-layouts.md`�
 
 - `docs/page-layouts.md` 파일은 항상 **전체를 새로 작성**한다. 기존 내용에 부분 추가하지 않는다.
 - 페이지 순서는 urls.py에 정의된 순서를 따른다.
-- `partials/` 디렉토리의 파셜은 독립 페이지가 아니므로, 해당 파셜을 사용하는 페이지 하위에 기록한다.
+- `components/` 디렉토리의 파셜은 독립 페이지가 아니므로, 해당 파셜을 사용하는 페이지 하위에 기록한다.
 - admin 페이지(`/admin/`)는 문서에 포함하지 않는다.

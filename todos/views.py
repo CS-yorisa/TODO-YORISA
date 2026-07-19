@@ -3,131 +3,10 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
-from ninja import Router
-from ninja.security import django_auth
-
-from todos.models import Category, Todo
-from todos.schemas import (
-    CategoryCreate,
-    CategoryOut,
-    CategoryPatch,
-    TodoCreate,
-    TodoList,
-    TodoPatch,
-)
-
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Todo
-
-router = Router(tags=["todos"], auth=django_auth)
-
-
-@router.get("/categories/", response=list[CategoryOut])
-def category_list_api(request):
-    return Category.objects.filter(member=request.user)
-
-
-@router.post("/categories/", response={201: CategoryOut, 400: dict})
-def category_create_api(request, payload: CategoryCreate):
-    try:
-        category = Category.objects.create(member=request.user, name=payload.name)
-    except IntegrityError:
-        return 400, {"detail": "이미 존재하는 카테고리 이름입니다."}
-    return 201, category
-
-
-@router.get("/categories/{category_id}/", response=CategoryOut)
-def category_detail_api(request, category_id: int):
-    return get_object_or_404(Category, id=category_id, member=request.user)
-
-
-@router.patch("/categories/{category_id}/", response={200: CategoryOut, 400: dict})
-def category_patch_api(request, category_id: int, payload: CategoryPatch):
-    category = get_object_or_404(Category, id=category_id, member=request.user)
-
-    data = payload.dict(exclude_unset=True)
-    for attr, value in data.items():
-        setattr(category, attr, value)
-
-    try:
-        category.save()
-    except IntegrityError:
-        return 400, {"detail": "이미 존재하는 카테고리 이름입니다."}
-
-    return category
-
-
-@router.delete("/categories/{category_id}/", response={204: None})
-def category_delete_api(request, category_id: int):
-    category = get_object_or_404(Category, id=category_id, member=request.user)
-    category.delete()
-    return 204, None
-
-
-@router.get("/", response=list[TodoList])
-def todo_list(request, status: str | None = None):
-    todos = Todo.objects.filter(member=request.user)
-    if status:
-        todos = todos.filter(status=status)
-    return todos
-
-
-@router.post("/", response={201: TodoList})
-def todo_create(request, payload: TodoCreate):
-    if payload.category is not None:
-        get_object_or_404(Category, id=payload.category, member=request.user)
-
-    data = payload.dict()
-    data["category_id"] = data.pop("category")
-    todo = Todo.objects.create(member=request.user, **data)
-    return 201, todo
-
-
-@router.get("/{todo_id}/", response=TodoList)
-def todo_detail(request, todo_id: int):
-    return get_object_or_404(Todo, id=todo_id, member=request.user)
-
-
-@router.put("/{todo_id}/", response=TodoList)
-def todo_update(request, todo_id: int, payload: TodoCreate):
-    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
-
-    if payload.category is not None:
-        get_object_or_404(Category, id=payload.category, member=request.user)
-
-    data = payload.dict()
-    data["category_id"] = data.pop("category")
-    for attr, value in data.items():
-        setattr(todo, attr, value)
-    todo.save()
-    return todo
-
-
-@router.patch("/{todo_id}/", response=TodoList)
-def todo_patch(request, todo_id: int, payload: TodoPatch):
-    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
-
-    data = payload.dict(exclude_unset=True)
-    if "category" in data and data["category"] is not None:
-        get_object_or_404(Category, id=data["category"], member=request.user)
-    if "category" in data:
-        data["category_id"] = data.pop("category")
-
-    for attr, value in data.items():
-        setattr(todo, attr, value)
-    todo.save()
-    return todo
-
-
-@router.delete("/{todo_id}/", response={204: None})
-def todo_delete(request, todo_id: int):
-    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
-    todo.delete()
-    return 204, None
-
+from todos.models import Category, Todo
 
 
 def _member_categories(member):
@@ -157,9 +36,9 @@ def todo_list(request):
     ctx = _context(request, category_id, status_filter)
     hx_target = request.headers.get('HX-Target', '')
     if hx_target == 'todo-list':
-        return render(request, 'partials/todos/todo_items.html', ctx)
+        return render(request, 'todos/components/todo_items.html', ctx)
     elif request.headers.get('HX-Request'):
-        return render(request, 'partials/todos/todo_section.html', ctx)
+        return render(request, 'todos/components/todo_section.html', ctx)
     return render(request, 'todos/list.html', ctx)
 
 
@@ -178,7 +57,7 @@ def todo_create(request):
             member=request.user, title=title, category=category, due_date=due_date
         )
 
-    return render(request, 'partials/todos/todo_items.html', {**_context(request, category_id), 'show_oob': True})
+    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
 
 
 @login_required
@@ -189,7 +68,7 @@ def todo_status_update(request, todo_id):
     if status in Todo.Status.values:
         todo.status = status
         todo.save()
-    return render(request, 'partials/todos/todo_card.html', {
+    return render(request, 'todos/components/todo_card.html', {
         'todo': todo,
         'Status': Todo.Status,
         'categories': _member_categories(request.user),
@@ -207,7 +86,7 @@ def todo_category_update(request, todo_id):
         else None
     )
     todo.save()
-    return render(request, 'partials/todos/todo_card.html', {
+    return render(request, 'todos/components/todo_card.html', {
         'todo': todo,
         'Status': Todo.Status,
         'categories': _member_categories(request.user),
@@ -220,7 +99,7 @@ def todo_delete(request):
     category_id = request.POST.get('category_id', '')
     ids = [i for i in request.POST.get('ids', '').split(',') if i]
     Todo.objects.filter(member=request.user, id__in=ids).delete()
-    return render(request, 'partials/todos/todo_items.html', {**_context(request, category_id), 'show_oob': True})
+    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
 
 
 @login_required
@@ -230,7 +109,7 @@ def todo_due_date_update(request, todo_id):
     due_date = request.POST.get('due_date', '')
     todo.due_date = date.fromisoformat(due_date) if due_date else None
     todo.save()
-    return render(request, 'partials/todos/todo_card.html', {
+    return render(request, 'todos/components/todo_card.html', {
         'todo': todo,
         'Status': Todo.Status,
         'categories': _member_categories(request.user),
@@ -265,7 +144,7 @@ def category_update(request, category_id):
             category.save()
         except IntegrityError:
             pass
-    return render(request, 'partials/todos/category_list.html', _category_list_context(request.user))
+    return render(request, 'todos/components/category_list.html', _category_list_context(request.user))
 
 
 @login_required
@@ -273,4 +152,4 @@ def category_update(request, category_id):
 def category_delete(request):
     ids = [i for i in request.POST.get('ids', '').split(',') if i]
     Category.objects.filter(member=request.user, id__in=ids).delete()
-    return render(request, 'partials/todos/category_list.html', _category_list_context(request.user))
+    return render(request, 'todos/components/category_list.html', _category_list_context(request.user))

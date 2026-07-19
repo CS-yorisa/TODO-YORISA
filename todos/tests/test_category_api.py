@@ -3,7 +3,7 @@ from ninja.testing import TestClient
 
 from accounts.models import Member
 from todos.models import Category
-from todos.views import router
+from todos.api import router
 
 client = TestClient(router)
 
