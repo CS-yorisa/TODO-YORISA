@@ -50,6 +50,7 @@ Django 템플릿 + HTMX로 동적 콘텐츠 처리. 인덱스 페이지에서 HT
   - `Router`로 엔드포인트 정의 → `NinjaAPI` 인스턴스에 마운트
   - 요청/응답 검증은 `ninja.Schema` (Pydantic 기반) 사용
   - PATCH용 스키마는 모든 필드를 `Optional`로 선언하고 `exclude_unset=True`로 처리
+- commit(커밋) 관련 요청이 오면 `commit` SKILL(`.claude/skills/commit/SKILL.md`)의 내용을 우선 참고하여 진행한다.
 
 ## 설정
 
