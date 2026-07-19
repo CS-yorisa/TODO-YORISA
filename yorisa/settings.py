@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -122,3 +123,9 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 AUTH_USER_MODEL = "accounts.Member"
+
+
+# JWT 설정 — 서명 키는 SECRET_KEY 재사용
+JWT_ALGORITHM = "HS256"
+JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
+JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)
