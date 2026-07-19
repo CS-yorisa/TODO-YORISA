@@ -1,175 +1,155 @@
-from dataclasses import dataclass
 from datetime import date
-from typing import Optional
 
-from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
+from django.db.models import Count
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from todos.models import Todo
+from todos.models import Category, Todo
 
 
-@dataclass
-class MockCategory:
-    id: int
-    name: str
-    todo_count: int = 0
-
-    def __str__(self):
-        return self.name
+def _member_categories(member):
+    return Category.objects.filter(member=member).annotate(todo_count=Count('todos'))
 
 
-@dataclass
-class MockTodo:
-    id: int
-    title: str
-    status: str
-    category: Optional[MockCategory] = None
-    due_date: Optional[date] = None
-
-    def get_status_display(self):
-        return {"todo": "할 일", "in_progress": "진행 중", "done": "완료"}.get(
-            self.status, self.status
-        )
-
-
-_CATEGORIES = [
-    MockCategory(id=1, name="업무", todo_count=2),
-    MockCategory(id=2, name="개인", todo_count=1),
-    MockCategory(id=3, name="공부", todo_count=1),
-]
-
-_TODOS = [
-    MockTodo(id=1, title="기획서 작성", status="todo", category=_CATEGORIES[0]),
-    MockTodo(id=2, title="코드 리뷰", status="in_progress", category=_CATEGORIES[0]),
-    MockTodo(
-        id=3,
-        title="운동하기",
-        status="done",
-        category=_CATEGORIES[1],
-        due_date=date.today(),
-    ),
-    MockTodo(id=4, title="알고리즘 공부", status="todo", category=_CATEGORIES[2]),
-    MockTodo(id=5, title="일기 쓰기", status="todo"),
-]
-
-
-def _context(category_id="", status_filter=""):
-    todos = _TODOS
+def _context(request, category_id='', status_filter=''):
+    todos = Todo.objects.filter(member=request.user)
     if category_id:
-        todos = [t for t in todos if t.category and str(t.category.id) == category_id]
+        todos = todos.filter(category_id=category_id)
     if status_filter:
-        todos = [t for t in todos if t.status == status_filter]
+        todos = todos.filter(status=status_filter)
     return {
-        "todos": todos,
-        "categories": _CATEGORIES,
-        "total_count": len(_TODOS),
-        "status_filter": status_filter,
-        "current_category_id": category_id,
-        "Status": Todo.Status,
+        'todos': todos,
+        'categories': _member_categories(request.user),
+        'total_count': Todo.objects.filter(member=request.user).count(),
+        'status_filter': status_filter,
+        'current_category_id': category_id,
+        'Status': Todo.Status,
     }
 
 
-def _todo_by_id(todo_id):
-    return next((t for t in _TODOS if t.id == todo_id), _TODOS[0])
-
-
+@login_required
 def todo_list(request):
-    category_id = request.GET.get("category", "")
-    status_filter = request.GET.get("status", "")
-    ctx = _context(category_id, status_filter)
-    hx_target = request.headers.get("HX-Target", "")
-    if hx_target == "todo-list":
-        return render(request, "todos/components/todo_items.html", ctx)
-    elif request.headers.get("HX-Request"):
-        return render(request, "todos/components/todo_section.html", ctx)
-    return render(request, "todos/list.html", ctx)
+    category_id = request.GET.get('category', '')
+    status_filter = request.GET.get('status', '')
+    ctx = _context(request, category_id, status_filter)
+    hx_target = request.headers.get('HX-Target', '')
+    if hx_target == 'todo-list':
+        return render(request, 'todos/components/todo_items.html', ctx)
+    elif request.headers.get('HX-Request'):
+        return render(request, 'todos/components/todo_section.html', ctx)
+    return render(request, 'todos/list.html', ctx)
 
 
+@login_required
 @require_POST
 def todo_create(request):
-    category_id = request.POST.get("category_id", "")
-    return render(
-        request,
-        "todos/components/todo_items.html",
-        {**_context(category_id), "show_oob": True},
-    )
+    title = request.POST.get('title', '').strip()
+    category_id = request.POST.get('category_id', '')
+    due_date = request.POST.get('due_date', '') or None
+
+    if title:
+        category = None
+        if category_id:
+            category = get_object_or_404(Category, id=category_id, member=request.user)
+        Todo.objects.create(
+            member=request.user, title=title, category=category, due_date=due_date
+        )
+
+    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
 
 
+@login_required
 @require_POST
 def todo_status_update(request, todo_id):
-    return render(
-        request,
-        "todos/components/todo_card.html",
-        {
-            "todo": _todo_by_id(todo_id),
-            "Status": Todo.Status,
-            "categories": _CATEGORIES,
-        },
-    )
+    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
+    status = request.POST.get('status', '')
+    if status in Todo.Status.values:
+        todo.status = status
+        todo.save()
+    return render(request, 'todos/components/todo_card.html', {
+        'todo': todo,
+        'Status': Todo.Status,
+        'categories': _member_categories(request.user),
+    })
 
 
+@login_required
 @require_POST
 def todo_category_update(request, todo_id):
-    return render(
-        request,
-        "todos/components/todo_card.html",
-        {
-            "todo": _todo_by_id(todo_id),
-            "Status": Todo.Status,
-            "categories": _CATEGORIES,
-        },
+    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
+    category_id = request.POST.get('category_id', '')
+    todo.category = (
+        get_object_or_404(Category, id=category_id, member=request.user)
+        if category_id
+        else None
     )
+    todo.save()
+    return render(request, 'todos/components/todo_card.html', {
+        'todo': todo,
+        'Status': Todo.Status,
+        'categories': _member_categories(request.user),
+    })
 
 
+@login_required
 @require_POST
 def todo_delete(request):
-    category_id = request.POST.get("category_id", "")
-    return render(
-        request,
-        "todos/components/todo_items.html",
-        {**_context(category_id), "show_oob": True},
-    )
+    category_id = request.POST.get('category_id', '')
+    ids = [i for i in request.POST.get('ids', '').split(',') if i]
+    Todo.objects.filter(member=request.user, id__in=ids).delete()
+    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
 
 
+@login_required
 @require_POST
 def todo_due_date_update(request, todo_id):
-    return render(
-        request,
-        "todos/components/todo_card.html",
-        {
-            "todo": _todo_by_id(todo_id),
-            "Status": Todo.Status,
-            "categories": _CATEGORIES,
-        },
-    )
+    todo = get_object_or_404(Todo, id=todo_id, member=request.user)
+    due_date = request.POST.get('due_date', '')
+    todo.due_date = date.fromisoformat(due_date) if due_date else None
+    todo.save()
+    return render(request, 'todos/components/todo_card.html', {
+        'todo': todo,
+        'Status': Todo.Status,
+        'categories': _member_categories(request.user),
+    })
 
 
+@login_required
 @require_POST
 def category_create(request):
-    return redirect("todo_list")
+    name = request.POST.get('name', '').strip()
+    if name:
+        Category.objects.get_or_create(member=request.user, name=name)
+    return redirect('todo_list')
 
 
-def _category_list_context():
+def _category_list_context(member):
     return {
-        "categories": _CATEGORIES,
-        "total_count": len(_TODOS),
-        "current_category_id": "",
+        'categories': _member_categories(member),
+        'total_count': Todo.objects.filter(member=member).count(),
+        'current_category_id': '',
     }
 
 
+@login_required
 @require_POST
 def category_update(request, category_id):
-    return render(
-        request,
-        "todos/components/category_list.html",
-        _category_list_context(),
-    )
+    category = get_object_or_404(Category, id=category_id, member=request.user)
+    name = request.POST.get('name', '').strip()
+    if name:
+        category.name = name
+        try:
+            category.save()
+        except IntegrityError:
+            pass
+    return render(request, 'todos/components/category_list.html', _category_list_context(request.user))
 
 
+@login_required
 @require_POST
 def category_delete(request):
-    return render(
-        request,
-        "todos/components/category_list.html",
-        _category_list_context(),
-    )
+    ids = [i for i in request.POST.get('ids', '').split(',') if i]
+    Category.objects.filter(member=request.user, id__in=ids).delete()
+    return render(request, 'todos/components/category_list.html', _category_list_context(request.user))

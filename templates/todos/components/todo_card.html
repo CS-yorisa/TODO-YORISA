@@ -2,7 +2,7 @@
 <div class="todo-card {% if todo.status == 'done' %}todo-card--done{% endif %}" id="todo-card-{{ todo.id }}">
     <button
         class="todo-card__select {% if todo.status == 'done' %}todo-card__select--selected{% endif %}"
-        hx-post="/api/todos/{{ todo.id }}/status/"
+        hx-post="/todos/{{ todo.id }}/status/"
         hx-target="#todo-card-{{ todo.id }}"
         hx-swap="outerHTML"
         hx-vals='{"status": "{% if todo.status == "done" %}todo{% else %}done{% endif %}"}'
@@ -19,7 +19,7 @@
             <div class="category-picker__menu">
                 <button
                     class="category-picker__option category-picker__option--none {% if not todo.category %}category-picker__option--active{% endif %}"
-                    hx-post="/api/todos/{{ todo.id }}/category/"
+                    hx-post="/todos/{{ todo.id }}/category/"
                     hx-target="#todo-card-{{ todo.id }}"
                     hx-swap="outerHTML"
                     hx-vals='{"category_id": ""}'
@@ -28,7 +28,7 @@
                 {% for cat in categories %}
                 <button
                     class="category-picker__option {{ cat.id|color_class }} {% if todo.category.id == cat.id %}category-picker__option--active{% endif %}"
-                    hx-post="/api/todos/{{ todo.id }}/category/"
+                    hx-post="/todos/{{ todo.id }}/category/"
                     hx-target="#todo-card-{{ todo.id }}"
                     hx-swap="outerHTML"
                     hx-vals='{"category_id": "{{ cat.id }}"}'
@@ -40,7 +40,7 @@
     </div>
     <form
         class="due-date-form"
-        hx-post="/api/todos/{{ todo.id }}/due-date/"
+        hx-post="/todos/{{ todo.id }}/due-date/"
         hx-target="#todo-card-{{ todo.id }}"
         hx-swap="outerHTML"
     >
@@ -68,7 +68,7 @@
         <div class="status-picker__menu">
             <button
                 class="status-picker__option status-picker__option--todo {% if todo.status == 'todo' %}status-picker__option--active{% endif %}"
-                hx-post="/api/todos/{{ todo.id }}/status/"
+                hx-post="/todos/{{ todo.id }}/status/"
                 hx-target="#todo-card-{{ todo.id }}"
                 hx-swap="outerHTML"
                 hx-vals='{"status": "todo"}'
@@ -78,7 +78,7 @@
             </button>
             <button
                 class="status-picker__option status-picker__option--in_progress {% if todo.status == 'in_progress' %}status-picker__option--active{% endif %}"
-                hx-post="/api/todos/{{ todo.id }}/status/"
+                hx-post="/todos/{{ todo.id }}/status/"
                 hx-target="#todo-card-{{ todo.id }}"
                 hx-swap="outerHTML"
                 hx-vals='{"status": "in_progress"}'
@@ -88,7 +88,7 @@
             </button>
             <button
                 class="status-picker__option status-picker__option--done {% if todo.status == 'done' %}status-picker__option--active{% endif %}"
-                hx-post="/api/todos/{{ todo.id }}/status/"
+                hx-post="/todos/{{ todo.id }}/status/"
                 hx-target="#todo-card-{{ todo.id }}"
                 hx-swap="outerHTML"
                 hx-vals='{"status": "done"}'

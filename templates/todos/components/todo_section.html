@@ -3,11 +3,12 @@
 
 <div class="todo-add-card">
     <form
-        hx-post="/api/todos/create/"
+        hx-post="/todos/create/"
         hx-target="#todo-list"
         hx-swap="innerHTML"
         hx-on::after-request="this.reset(); resetAddCategoryPicker(); resetAddDueDateBtn()"
     >
+        {% csrf_token %}
         <div class="todo-add-card__row">
             <span class="todo-add-card__plus">📝</span>
             <input class="todo-add-card__input" type="text" name="title" placeholder="새 할 일을 입력하세요..." required>
@@ -55,7 +56,7 @@
     <div class="status-filter">
         <button
             class="status-filter__btn {% if not status_filter %}status-filter__btn--active{% endif %}"
-            hx-get="/api/todos/?category={{ current_category_id }}"
+            hx-get="/todos/?category={{ current_category_id }}"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             onclick="setActiveTab(this)"
@@ -65,7 +66,7 @@
         {% for value, label in Status.choices %}
         <button
             class="status-filter__btn {% if status_filter == value %}status-filter__btn--active{% endif %}"
-            hx-get="/api/todos/?category={{ current_category_id }}&status={{ value }}"
+            hx-get="/todos/?category={{ current_category_id }}&status={{ value }}"
             hx-target="#todo-list"
             hx-swap="innerHTML"
             onclick="setActiveTab(this)"

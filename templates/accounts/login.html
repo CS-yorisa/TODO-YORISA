@@ -9,6 +9,10 @@
         <h1 class="auth-title">로그인</h1>
         <p class="auth-desc">계정에 로그인하고 오늘의 할 일을 확인하세요.</p>
 
+        {% if error %}
+        <p class="form-error">{{ error }}</p>
+        {% endif %}
+
         <form method="post" class="auth-form">
             {% csrf_token %}
 

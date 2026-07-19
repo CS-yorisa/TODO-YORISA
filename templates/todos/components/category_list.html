@@ -1,7 +1,7 @@
 <li>
     <button
         class="category-list__item {% if not current_category_id %}category-list__item--active{% endif %}"
-        hx-get="/api/todos/"
+        hx-get="/todos/"
         hx-target="#todo-section"
         hx-swap="innerHTML"
         onclick="setActiveCategory(this)"
@@ -14,7 +14,7 @@
 <li class="category-list__li">
     <button
         class="category-list__item category-list__item--view {% if current_category_id == category.id|stringformat:'s' %}category-list__item--active{% endif %}"
-        hx-get="/api/todos/?category={{ category.id }}"
+        hx-get="/todos/?category={{ category.id }}"
         hx-target="#todo-section"
         hx-swap="innerHTML"
         onclick="setActiveCategory(this)"
@@ -25,11 +25,12 @@
     <div class="category-list__item--edit">
         <form
             class="category-edit-form"
-            hx-post="/api/todos/categories/{{ category.id }}/update/"
+            hx-post="/todos/categories/{{ category.id }}/update/"
             hx-target="#category-list"
             hx-swap="innerHTML"
             hx-on::after-request="clearCategorySelection()"
         >
+            {% csrf_token %}
             <input
                 class="category-edit-input"
                 type="text"

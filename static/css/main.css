@@ -211,6 +211,16 @@ button { cursor: pointer; font: inherit; border: none; background: none; }
     gap: 20px;
     text-align: left;
 }
+.form-error {
+    background: rgba(231, 111, 81, 0.1);
+    border: 1px solid var(--accent-dark);
+    color: var(--accent-dark);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    text-align: left;
+}
 .form-row {
     display: grid;
     grid-template-columns: 2fr 3fr;

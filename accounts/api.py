@@ -6,19 +6,21 @@ from django.core.validators import validate_email
 from django.db import IntegrityError
 from ninja import Router
 
-from accounts.auth import create_access_token, create_refresh_token, decode_token
+from accounts.auth import JWTAuth, create_access_token, create_refresh_token, decode_token
 from accounts.models import Member
 from accounts.schemas import (
     AccessOut,
     ErrorOut,
     LoginIn,
     MemberOut,
+    MemberUpdateIn,
     RefreshIn,
     SignupIn,
     TokenOut,
 )
 
 router = Router(tags=["auth"])
+profile_router = Router(tags=["accounts"], auth=JWTAuth())
 
 
 @router.post("/signup/", response={201: MemberOut, 400: ErrorOut, 409: ErrorOut})
@@ -66,3 +68,29 @@ def refresh(request, payload: RefreshIn):
     if not Member.objects.filter(pk=member_id, is_active=True).exists():
         return 401, {"detail": "유효하지 않은 토큰입니다."}
     return 200, {"access": create_access_token(member_id)}
+
+
+@profile_router.get("/me/", response=MemberOut)
+def me(request):
+    return request.user
+
+
+@profile_router.patch("/me/", response={200: MemberOut, 409: ErrorOut})
+def update_me(request, payload: MemberUpdateIn):
+    data = payload.dict(exclude_unset=True)
+    for attr, value in data.items():
+        setattr(request.user, attr, value)
+    try:
+        request.user.save()
+    except IntegrityError:
+        return 409, {"detail": "이미 사용 중인 이메일입니다."}
+    return request.user
+
+
+@profile_router.delete("/me/", response={204: None})
+def withdraw(request):
+    member = request.user
+    member.is_active = False
+    member.email = None
+    member.save()
+    return 204, None

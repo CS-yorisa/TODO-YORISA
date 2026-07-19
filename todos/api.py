@@ -1,10 +1,62 @@
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from ninja import NinjaAPI, Router
+from ninja.security import django_auth
 
+from accounts.api import profile_router, router as auth_router
 from todos.models import Category, Todo
-from todos.schemas import TodoCreate, TodoList, TodoPatch
+from todos.schemas import (
+    CategoryCreate,
+    CategoryOut,
+    CategoryPatch,
+    TodoCreate,
+    TodoList,
+    TodoPatch,
+)
 
-router = Router(tags=["todos"])
+router = Router(tags=["todos"], auth=django_auth)
+
+
+@router.get("/categories/", response=list[CategoryOut])
+def category_list_api(request):
+    return Category.objects.filter(member=request.user)
+
+
+@router.post("/categories/", response={201: CategoryOut, 400: dict})
+def category_create_api(request, payload: CategoryCreate):
+    try:
+        category = Category.objects.create(member=request.user, name=payload.name)
+    except IntegrityError:
+        return 400, {"detail": "이미 존재하는 카테고리 이름입니다."}
+    return 201, category
+
+
+@router.get("/categories/{category_id}/", response=CategoryOut)
+def category_detail_api(request, category_id: int):
+    return get_object_or_404(Category, id=category_id, member=request.user)
+
+
+@router.patch("/categories/{category_id}/", response={200: CategoryOut, 400: dict})
+def category_patch_api(request, category_id: int, payload: CategoryPatch):
+    category = get_object_or_404(Category, id=category_id, member=request.user)
+
+    data = payload.dict(exclude_unset=True)
+    for attr, value in data.items():
+        setattr(category, attr, value)
+
+    try:
+        category.save()
+    except IntegrityError:
+        return 400, {"detail": "이미 존재하는 카테고리 이름입니다."}
+
+    return category
+
+
+@router.delete("/categories/{category_id}/", response={204: None})
+def category_delete_api(request, category_id: int):
+    category = get_object_or_404(Category, id=category_id, member=request.user)
+    category.delete()
+    return 204, None
 
 
 @router.get("/", response=list[TodoList])
@@ -71,3 +123,5 @@ def todo_delete_api(request, todo_id: int):
 
 api = NinjaAPI()
 api.add_router("/todos/", router)
+api.add_router("/auth/", auth_router)
+api.add_router("/accounts/", profile_router)

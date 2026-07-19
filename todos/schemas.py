@@ -1,6 +1,20 @@
 from ninja import Schema
 
 
+class CategoryCreate(Schema):
+    name: str
+
+
+class CategoryPatch(Schema):
+    name: str | None = None
+
+
+class CategoryOut(Schema):
+    id: int
+    name: str
+    member_id: int | None
+
+
 class TodoCreate(Schema):
     title: str
     description: str = ""

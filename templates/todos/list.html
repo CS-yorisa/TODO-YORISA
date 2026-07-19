@@ -35,17 +35,18 @@
 
         <div class="category-delete-bar" id="category-delete-bar">
             <form
-                hx-post="/api/todos/categories/delete/"
+                hx-post="/todos/categories/delete/"
                 hx-target="#category-list"
                 hx-swap="innerHTML"
                 hx-on::after-request="clearCategorySelection()"
             >
+                {% csrf_token %}
                 <input type="hidden" id="category-delete-ids" name="ids" value="">
                 <button type="submit" class="category-delete-submit">선택 삭제</button>
             </form>
         </div>
 
-        <form class="category-create-form" method="post" action="/api/todos/categories/create/">
+        <form class="category-create-form" method="post" action="/todos/categories/create/">
             {% csrf_token %}
             <input class="category-create-form__input" type="text" name="name" placeholder="새 카테고리" required>
             <button class="category-create-form__btn" type="submit">+ 추가</button>
