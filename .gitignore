@@ -11,3 +11,5 @@ db.sqlite3
 
 .claude/agent-memory/
 .claude/settings.local.json
+
+.vscode
