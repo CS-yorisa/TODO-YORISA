@@ -1,9 +1,8 @@
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-from ninja import NinjaAPI, Router
+from ninja import Router
 from ninja.security import django_auth
 
-from accounts.api import profile_router, router as auth_router
 from todos.models import Category, Todo
 from todos.schemas import (
     CategoryCreate,
@@ -119,9 +118,3 @@ def todo_delete_api(request, todo_id: int):
     todo = get_object_or_404(Todo, id=todo_id, member=request.user)
     todo.delete()
     return 204, None
-
-
-api = NinjaAPI()
-api.add_router("/todos/", router)
-api.add_router("/auth/", auth_router)
-api.add_router("/accounts/", profile_router)
