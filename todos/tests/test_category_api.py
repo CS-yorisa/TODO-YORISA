@@ -57,6 +57,27 @@ class CategoryCreateTest(TestCase):
         )
         self.assertEqual(response.status_code, 201)
 
+    def test_create_empty_name(self):
+        response = client.post("/categories/", json={"name": ""}, user=self.member)
+        self.assertEqual(response.status_code, 422)
+
+    def test_create_null_name(self):
+        response = client.post("/categories/", json={"name": None}, user=self.member)
+        self.assertEqual(response.status_code, 422)
+
+    def test_create_name_too_long(self):
+        response = client.post(
+            "/categories/", json={"name": "가" * 51}, user=self.member
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_create_name_stripped(self):
+        response = client.post(
+            "/categories/", json={"name": "  업무  "}, user=self.member
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["name"], "업무")
+
 
 class CategoryDetailTest(TestCase):
     def setUp(self):
@@ -102,6 +123,37 @@ class CategoryPatchTest(TestCase):
             user=self.member,
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_patch_null_name(self):
+        response = client.patch(
+            f"/categories/{self.category.id}/",
+            json={"name": None},
+            user=self.member,
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_patch_empty_name(self):
+        response = client.patch(
+            f"/categories/{self.category.id}/",
+            json={"name": ""},
+            user=self.member,
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_patch_name_too_long(self):
+        response = client.patch(
+            f"/categories/{self.category.id}/",
+            json={"name": "가" * 51},
+            user=self.member,
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_patch_empty_body_keeps_name(self):
+        client.patch(
+            f"/categories/{self.category.id}/", json={}, user=self.member
+        )
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.name, "업무")
 
     def test_patch_other_member(self):
         other = Member.objects.create_user(username="user2", password="pass")
