@@ -77,7 +77,8 @@ class MemberWithdrawTest(TestCase):
         self.assertEqual(response.status_code, 204)
         self.member.refresh_from_db()
         self.assertFalse(self.member.is_active)
-        self.assertIsNone(self.member.email)
+        self.assertEqual(self.member.email, "user1@test.com")
+        self.assertIsNotNone(self.member.withdrawn_at)
 
     def test_withdraw_requires_auth(self):
         response = client.delete("/me/")
@@ -90,4 +91,8 @@ class MemberWithdrawTest(TestCase):
 
     def test_email_reusable_after_withdraw(self):
         client.delete("/me/", headers={"Authorization": f"Bearer {self.token}"})
-        self.assertFalse(Member.objects.filter(email="user1@test.com").exists())
+        member2 = Member.objects.create_user(
+            username="user2", email="user1@test.com", password="strong-pass-9231"
+        )
+        self.assertIsNotNone(member2)
+        self.assertEqual(member2.email, "user1@test.com")

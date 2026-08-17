@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from django.conf import settings
 from django.test import TestCase
+from django.utils import timezone
 from ninja.testing import TestClient
 
 from accounts.api import router
@@ -59,6 +60,19 @@ class SignupTest(TestCase):
             json={"username": "newuser", "email": "dup@test.com", "password": "another-pass-111"},
         )
         self.assertEqual(response.status_code, 409)
+
+    def test_signup_with_withdrawn_member_email(self):
+        Member.objects.create_user(
+            username="origin", email="dup@test.com", password="strong-pass-9231"
+        )
+        Member.objects.filter(username="origin").update(
+            is_active=False, withdrawn_at=timezone.now()
+        )
+        response = client.post(
+            "/signup/",
+            json={"username": "newuser", "email": "dup@test.com", "password": "another-pass-111"},
+        )
+        self.assertEqual(response.status_code, 201)
 
     def test_invalid_email_format(self):
         response = client.post(
