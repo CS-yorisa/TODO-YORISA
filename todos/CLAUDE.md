@@ -32,7 +32,7 @@
 - `models.py` — Category, Todo 모델
 - `schemas.py` — TodoCreate(생성/전체수정), TodoPatch(부분수정), TodoList(응답) 스키마
 - `views.py` — 템플릿 렌더링 뷰 함수 (HTMX 파셜 포함)
-- `api.py` — django-ninja Router로 CRUD 엔드포인트 정의, NinjaAPI 인스턴스 생성 및 router 마운트
+- `api.py` — django-ninja `Router`로 Todo/Category CRUD 엔드포인트 정의 (`router`만 export). NinjaAPI 인스턴스 생성 및 마운트는 `yorisa/api.py`가 담당한다.
 - `urls.py` — 템플릿 뷰용 urlpatterns
 
 ## 테스트
