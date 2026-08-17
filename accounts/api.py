@@ -58,6 +58,8 @@ def login(request, payload: LoginIn):
     member = authenticate(request, username=payload.username, password=payload.password)
     if member is None:
         return 401, {"detail": "사용자 이름 또는 비밀번호가 올바르지 않습니다."}
+    member.last_login = timezone.now()
+    member.save(update_fields=["last_login"])
     return 200, {
         "access": create_access_token(member.pk),
         "refresh": create_refresh_token(member.pk),
