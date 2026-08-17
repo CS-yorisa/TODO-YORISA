@@ -59,7 +59,7 @@ def category_delete_api(request, category_id: int):
 
 
 @router.get("/", response=list[TodoList])
-def todo_list_api(request, status: str | None = None):
+def todo_list_api(request, status: Todo.Status | None = None):
     todos = Todo.objects.filter(member=request.user)
     if status:
         todos = todos.filter(status=status)
