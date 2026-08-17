@@ -105,6 +105,7 @@ class LoginTest(TestCase):
         assert self.member is not None
 
     def test_login(self):
+        self.assertIsNone(self.member.last_login)
         response = client.post(
             "/login/", json={"username": "user1", "password": "strong-pass-9231"}
         )
@@ -112,6 +113,8 @@ class LoginTest(TestCase):
         data = response.json()
         self.assertIn("access", data)
         self.assertIn("refresh", data)
+        self.member.refresh_from_db()
+        self.assertIsNotNone(self.member.last_login)
 
     def test_wrong_password(self):
         response = client.post(
