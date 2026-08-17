@@ -15,6 +15,7 @@
 - `title` (CharField, max=200) — 제목
 - `description` (TextField, blank=True) — 설명
 - `status` (CharField, default="todo") — 상태값: `Todo.Status` TextChoices
+- `due_date` (DateField, null=True, blank=True) — 기한일 (선택)
 
 #### Todo.Status
 | 값            | 레이블  |
@@ -30,7 +31,7 @@
 ## 파일 구조
 
 - `models.py` — Category, Todo 모델
-- `schemas.py` — TodoCreate(생성/전체수정), TodoPatch(부분수정), TodoList(응답) 스키마
+- `schemas.py` — TodoCreate(생성/전체수정), TodoPatch(부분수정 — nullable 컬럼만 `| None`), TodoList(응답), CategoryCreate/CategoryPatch/CategoryOut 스키마. 길이·choices 제약은 모델과 1:1로 대응한다.
 - `views.py` — 템플릿 렌더링 뷰 함수 (HTMX 파셜 포함)
 - `api.py` — django-ninja `Router`로 Todo/Category CRUD 엔드포인트 정의 (`router`만 export). NinjaAPI 인스턴스 생성 및 마운트는 `yorisa/api.py`가 담당한다.
 - `urls.py` — 템플릿 뷰용 urlpatterns
