@@ -1,4 +1,4 @@
-.PHONY: dev shell make migrate check
+.PHONY: dev shell make migrate check check-fix celery-worker celery-beat
 
 dev:
 	uv run python manage.py runserver
@@ -17,3 +17,9 @@ check:
 
 check-fix:
 	uv run ruff check . --fix
+
+celery-worker:
+	uv run celery -A yorisa worker -l info
+
+celery-beat:
+	uv run celery -A yorisa beat -l info

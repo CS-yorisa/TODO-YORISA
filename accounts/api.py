@@ -4,9 +4,15 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError
+from django.utils import timezone
 from ninja import Router
 
-from accounts.auth import JWTAuth, create_access_token, create_refresh_token, decode_token
+from accounts.auth import (
+    JWTAuth,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
 from accounts.models import Member
 from accounts.schemas import (
     AccessOut,
@@ -31,7 +37,7 @@ def signup(request, payload: SignupIn):
         return 400, {"detail": "올바른 이메일 형식이 아닙니다."}
     if Member.objects.filter(username=payload.username).exists():
         return 409, {"detail": "이미 사용 중인 사용자 이름입니다."}
-    if Member.objects.filter(email=payload.email).exists():
+    if Member.objects.filter(email=payload.email, withdrawn_at__isnull=True).exists():
         return 409, {"detail": "이미 사용 중인 이메일입니다."}
     try:
         validate_password(payload.password)
@@ -52,6 +58,8 @@ def login(request, payload: LoginIn):
     member = authenticate(request, username=payload.username, password=payload.password)
     if member is None:
         return 401, {"detail": "사용자 이름 또는 비밀번호가 올바르지 않습니다."}
+    member.last_login = timezone.now()
+    member.save(update_fields=["last_login"])
     return 200, {
         "access": create_access_token(member.pk),
         "refresh": create_refresh_token(member.pk),
@@ -91,6 +99,6 @@ def update_me(request, payload: MemberUpdateIn):
 def withdraw(request):
     member = request.user
     member.is_active = False
-    member.email = None
+    member.withdrawn_at = timezone.now()
     member.save()
     return 204, None

@@ -129,3 +129,22 @@ AUTH_USER_MODEL = "accounts.Member"
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
 JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)
+
+
+# Celery 설정
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")
+CELERY_RESULT_EXPIRES = timedelta(hours=1)  # 디버깅용 결과 TTL, 영속화 목적 아님
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+CELERY_TASK_TRACK_STARTED = True
+
+CELERY_BEAT_SCHEDULE = {
+    "detect-dormant-members": {
+        "task": "accounts.tasks.detect_dormant_members",
+        "schedule": timedelta(hours=24),
+    },
+}
+
+# 장기 미접속(휴면) 판정 기준일수
+DORMANT_MEMBER_DAYS = 90

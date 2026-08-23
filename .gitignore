@@ -9,5 +9,10 @@ __pycache__/
 # django
 db.sqlite3
 
+# celery
+celerybeat-schedule
+
 .claude/agent-memory/
 .claude/settings.local.json
+
+.vscode

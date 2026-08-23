@@ -21,6 +21,8 @@ make migrate                         # 마이그레이션 적용
 make check                           # ruff 린트 검사
 make check-fix                       # ruff 린트 + 자동 수정
 uv run mypy .                        # 타입 검사
+make celery-worker                   # Celery 워커 실행
+make celery-beat                     # Celery beat 스케줄러 실행
 ```
 
 ## 아키텍처
@@ -30,7 +32,7 @@ uv run mypy .                        # 타입 검사
 - **todos/** — 핵심 앱: `Todo`, `Category` 모델 및 django-ninja REST API
 - **templates/** — Django 템플릿 + HTMX. `base.html`에서 HTMX CDN 로드
 - **static/** — 정적 파일 (CSS)
-- **docs/** — ERD (`erd.md`), 페이지 레이아웃 (`page-layouts.md`), 템플릿 작성 규칙 (`template-conventions.md`)
+- **docs/** — ERD (`erd.md`), 페이지 레이아웃 (`page-layouts.md`), 템플릿 작성 규칙 (`template-conventions.md`), Celery (`celery.md`)
 
 ### API 계층
 
@@ -63,5 +65,6 @@ Django 템플릿 + HTMX로 동적 콘텐츠 처리. `templates/index.html`을 �
 ## 설정
 
 - `django-environ`으로 환경변수 관리, 프로젝트 루트의 `.env` 파일에서 로드
-- `SECRET_KEY`, `DEBUG`는 `.env`에서 읽음
+- `SECRET_KEY`, `DEBUG`, `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`는 `.env`에서 읽음
 - DB: SQLite (개발), PostgreSQL (운영 예정)
+- Celery 브로커/결과 백엔드: Redis (로컬 개발 환경 실행 방법은 [docs/celery.md](docs/celery.md) 참고)
