@@ -20,6 +20,42 @@ function clearCategorySelection() {
     if (bar) bar.style.display = 'none';
 }
 
+function toggleTodoDeleteMode() {
+    const list = document.getElementById('todo-list');
+    const btn = document.getElementById('todo-delete-toggle');
+    const bar = document.getElementById('todo-delete-bar');
+    const isOn = list.classList.toggle('delete-mode');
+    btn.classList.toggle('active');
+    clearTodoSelection();
+    bar.style.display = isOn ? 'flex' : 'none';
+}
+
+function onTodoCheckChange() {
+    const ids = Array.from(document.querySelectorAll('.todo-card__bulk-check:checked')).map(cb => cb.dataset.id);
+    document.getElementById('todo-delete-ids').value = ids.join(',');
+    updateTodoDeleteBarState(ids.length);
+}
+
+function clearTodoSelection() {
+    document.querySelectorAll('.todo-card__bulk-check').forEach(cb => cb.checked = false);
+    const idsInput = document.getElementById('todo-delete-ids');
+    if (idsInput) idsInput.value = '';
+    updateTodoDeleteBarState(0);
+}
+
+function updateTodoDeleteBarState(count) {
+    const countEl = document.getElementById('todo-delete-count');
+    const submitBtn = document.getElementById('todo-delete-submit');
+    if (!countEl || !submitBtn) return;
+    if (count > 0) {
+        countEl.textContent = `🗑️ ${count}개 삭제 예정`;
+        submitBtn.disabled = false;
+    } else {
+        countEl.textContent = '⚠️ 삭제할 항목을 선택하세요';
+        submitBtn.disabled = true;
+    }
+}
+
 function setActiveCategory(btn) {
     document.querySelectorAll('.category-list__item').forEach(b => b.classList.remove('category-list__item--active'));
     btn.classList.add('category-list__item--active');
@@ -126,15 +162,27 @@ function initDueDatePickers() {
 
 function updateAddDueDateBtn(dateStr) {
     const btn = document.getElementById('add-due-btn');
+    const dBadge = document.getElementById('add-d-day-badge');
     if (!btn) return;
     btn.classList.remove('due-badge--none', 'due-badge--upcoming', 'due-badge--today', 'due-badge--overdue');
-    if (dateStr) {
-        const [y, m, d] = dateStr.split('-');
-        btn.textContent = `📅 ${y}/${parseInt(m)}/${parseInt(d)}`;
+    if (typeof dateStr === 'string' && dateStr) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const picked = new Date(y, m - 1, d);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diffDays = Math.round((picked - today) / 86400000);
+        const dLabel = diffDays === 0 ? 'D-DAY' : diffDays > 0 ? `D-${diffDays}` : '';
+        btn.textContent = `📅 ${y}/${m}/${d}`;
         btn.classList.add('due-badge--upcoming');
+        if (dBadge) {
+            dBadge.textContent = dLabel;
+            dBadge.className = 'd-day-badge' + (dLabel ? ' d-day-badge--' + (diffDays === 0 ? 'today' : 'upcoming') : '');
+            dBadge.style.display = dLabel ? 'inline-block' : 'none';
+        }
     } else {
         btn.textContent = '📅 기한 추가';
         btn.classList.add('due-badge--none');
+        if (dBadge) dBadge.style.display = 'none';
     }
 }
 

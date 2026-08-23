@@ -13,6 +13,7 @@
         <div class="nav__actions">
             {% if user.is_authenticated %}
                 <span class="nav__user">{{ user.first_name|default:user.username }}님</span>
+                <a href="{% url 'accounts:mypage' %}" class="btn btn--ghost">마이페이지</a>
                 <a href="{% url 'accounts:logout' %}" class="btn btn--ghost">로그아웃</a>
             {% else %}
                 <a href="{% url 'accounts:login' %}" class="btn btn--ghost">로그인</a>

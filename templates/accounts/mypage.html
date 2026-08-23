@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}마이페이지 — Todo Yorisa{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+    <div class="auth-card">
+        <a href="/" class="auth-logo">🍳 Todo Yorisa</a>
+        <h1 class="auth-title">마이페이지</h1>
+        <p class="auth-desc">내 회원 정보를 확인하세요.</p>
+
+        <div class="profile-info">
+            <div class="profile-info__row">
+                <span class="profile-info__label">아이디</span>
+                <span class="profile-info__value">{{ profile.username }}</span>
+            </div>
+            <div class="profile-info__row">
+                <span class="profile-info__label">이름</span>
+                <span class="profile-info__value">{{ profile.last_name }}{{ profile.first_name }}</span>
+            </div>
+            <div class="profile-info__row">
+                <span class="profile-info__label">이메일</span>
+                <span class="profile-info__value">{{ profile.email|default:"등록된 이메일이 없습니다" }}</span>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <a href="{% url 'accounts:mypage_verify' %}" class="profile-action">
+                <span class="profile-action__icon">✏️</span>
+                정보 수정
+            </a>
+            <a href="{% url 'accounts:password_verify' %}" class="profile-action profile-action--accent">
+                <span class="profile-action__icon">🔒</span>
+                비밀번호 변경
+            </a>
+        </div>
+
+        <p class="auth-footer">
+            <a href="{% url 'todo_list' %}" class="auth-link">할 일 목록으로 돌아가기</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
