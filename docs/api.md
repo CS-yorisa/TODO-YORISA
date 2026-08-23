@@ -73,21 +73,35 @@ PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 �
 | 클래스 | 용도 |
 |--------|------|
 | `TodoCreate` | 생성(POST) / 전체 수정(PUT) 요청 바디 |
-| `TodoPatch` | 부분 수정(PATCH) 요청 바디 — 모든 필드 Optional |
-| `TodoList` | 응답 (id, title, description, status, category, member) |
+| `TodoPatch` | 부분 수정(PATCH) 요청 바디 — 모든 필드 선택 입력 |
+| `TodoList` | 응답 (id, title, description, status, category_id, member_id, due_date) |
+
+#### 필드
+
+| 필드 | 타입 | 제약 | `null` 허용 |
+|------|------|------|-------------|
+| `title` | string | 1~200자, 앞뒤 공백 제거 후 검사 | 불가 |
+| `description` | string | 제한 없음 | 불가 |
+| `status` | enum | `todo` / `in_progress` / `done` | 불가 |
+| `category` | integer | 본인 소유 카테고리만 (아니면 404) | 허용 (값 해제) |
+| `due_date` | string(date) | `YYYY-MM-DD` | 허용 (값 해제) |
+
+PATCH에서 `category`·`due_date`에 `null`을 보내면 값이 해제된다. 나머지 필드에 `null`을 보내면 422다. 제약 위반은 모두 422를 반환한다.
 
 ### 엔드포인트
 
 | 메서드 | 경로 | 응답 코드 | 설명 |
 |--------|------|-----------|------|
-| GET | `/` | 200 | 목록 조회 (`?status=`로 필터 가능) |
-| POST | `/` | 201 | 생성 |
+| GET | `/` | 200 / 422 | 목록 조회 (`?status=`로 필터. 규격 밖 값은 422) |
+| POST | `/` | 201 / 422 | 생성 |
 | GET | `/{todo_id}/` | 200 | 상세 조회 |
-| PUT | `/{todo_id}/` | 200 | 전체 수정 |
-| PATCH | `/{todo_id}/` | 200 | 부분 수정 |
+| PUT | `/{todo_id}/` | 200 / 422 | 전체 수정 |
+| PATCH | `/{todo_id}/` | 200 / 422 | 부분 수정 |
 | DELETE | `/{todo_id}/` | 204 | 삭제 |
 
 category 지정 시 해당 카테고리도 `member=request.user` 소유 여부를 검증한다.
+
+**PUT은 전체 교체다.** 요청에서 생략한 필드는 모델 기본값으로 초기화된다 (`status`는 `todo`, `category`와 `due_date`는 `null`). 일부 필드만 바꾸려면 PATCH를 사용한다.
 
 ### Categories
 
@@ -97,18 +111,18 @@ category 지정 시 해당 카테고리도 `member=request.user` 소유 여부�
 
 | 클래스 | 용도 |
 |--------|------|
-| `CategoryCreate` | 생성(POST) 요청 바디 (name) |
-| `CategoryPatch` | 부분 수정(PATCH) 요청 바디 — name Optional |
-| `CategoryOut` | 응답 (id, name, member) |
+| `CategoryCreate` | 생성(POST) 요청 바디 (name — 1~50자, 앞뒤 공백 제거) |
+| `CategoryPatch` | 부분 수정(PATCH) 요청 바디 — name 선택 입력, `null` 불가 |
+| `CategoryOut` | 응답 (id, name, member_id) |
 
 #### 엔드포인트
 
 | 메서드 | 경로 | 응답 코드 | 설명 |
 |--------|------|-----------|------|
 | GET | `/` | 200 | 목록 조회 |
-| POST | `/` | 201 / 400 | 생성. 같은 회원 내 이름 중복 시 400 |
+| POST | `/` | 201 / 400 / 422 | 생성. 같은 회원 내 이름 중복 시 400, 길이 위반 시 422 |
 | GET | `/{category_id}/` | 200 | 상세 조회 |
-| PATCH | `/{category_id}/` | 200 / 400 | 부분 수정. 이름 중복 시 400 |
+| PATCH | `/{category_id}/` | 200 / 400 / 422 | 부분 수정. 이름 중복 시 400, 길이 위반 시 422 |
 | DELETE | `/{category_id}/` | 204 | 삭제 |
 
 `member`가 다른 카테고리에 접근하면 404를 반환한다(존재 여부를 노출하지 않음). 이름 유일성은 회원 단위로 검증한다(`unique_together = [member, name]`).

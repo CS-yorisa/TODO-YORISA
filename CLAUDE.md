@@ -25,7 +25,7 @@ uv run mypy .                        # 타입 검사
 
 ## 아키텍처
 
-- **yorisa/** — Django 프로젝트 설정 (settings, 루트 URL 설정)
+- **yorisa/** — Django 프로젝트 설정 (settings, 루트 URL 설정, API 조립 `api.py`)
 - **accounts/** — 커스텀 유저 모델 (`Member`, `AbstractUser` 상속). `AUTH_USER_MODEL = "accounts.Member"`
 - **todos/** — 핵심 앱: `Todo`, `Category` 모델 및 django-ninja REST API
 - **templates/** — Django 템플릿 + HTMX. `base.html`에서 HTMX CDN 로드
@@ -35,10 +35,11 @@ uv run mypy .                        # 타입 검사
 ### API 계층
 
 API는 **django-ninja**를 사용한다 (DRF 아님). 구조:
-- `todos/urls.py`에서 `NinjaAPI` 인스턴스 생성 후 라우터 마운트
-- `todos/views.py`에서 `@router.get/post/put/patch/delete`로 엔드포인트 정의
-- `todos/schemas.py`에서 Pydantic 스타일 `Schema` 클래스로 요청/응답 검증
-- 루트 URL 설정(`yorisa/urls.py`)에서 `/api/` 경로에 마운트
+- 각 앱의 `api.py`에서 `Router`를 만들고 `@router.get/post/put/patch/delete`로 엔드포인트를 정의한다. 앱은 `Router`만 export하며 `NinjaAPI` 인스턴스를 만들지 않는다.
+- 각 앱의 `schemas.py`에서 Pydantic 스타일 `Schema` 클래스로 요청/응답을 검증한다.
+- `yorisa/api.py`에서 `NinjaAPI` 인스턴스를 **하나만** 만들고 모든 앱 Router를 마운트한다 (`/auth/`, `/accounts/`, `/todos/` 순).
+- 루트 URL 설정(`yorisa/urls.py`)에서 `path("api/", api.urls)`로 `/api/`에 연결한다.
+- 앱 모듈은 `yorisa.api`를 import하지 않는다 (순환 import 방지). 새 앱의 API는 `<app>/api.py`에 Router를 만들고 `yorisa/api.py`에 한 줄 마운트한다.
 
 ### 프론트엔드
 
@@ -49,9 +50,14 @@ Django 템플릿 + HTMX로 동적 콘텐츠 처리. `templates/index.html`을 �
 ## 개발 규칙
 
 - API 엔드포인트 개발 시 반드시 **django-ninja**를 사용한다 (DRF 사용 금지).
-  - `Router`로 엔드포인트 정의 → `NinjaAPI` 인스턴스에 마운트
+  - 앱의 `api.py`에서 `Router`로 엔드포인트 정의 → `yorisa/api.py`의 단일 `NinjaAPI` 인스턴스에 마운트
   - 요청/응답 검증은 `ninja.Schema` (Pydantic 기반) 사용
-  - PATCH용 스키마는 모든 필드를 `Optional`로 선언하고 `exclude_unset=True`로 처리
+  - PATCH용 스키마는 모든 필드를 **선택 입력**(기본값 보유)으로 선언하고 핸들러에서 `exclude_unset=True`로 처리
+    - "선택 입력"은 *필수가 아님*을 뜻하며 **`| None`(nullable)과 다르다.**
+    - `| None`은 **모델 컬럼이 `null=True`인 필드에만** 붙인다. 그래야 `{"field": null}`이 "값 해제"로 처리된다.
+    - NOT NULL 컬럼에 `| None`을 붙이면 안 된다. `exclude_unset=True`는 *보내지 않은* 필드만 거를 뿐 *명시적으로 보낸 null*은 통과시켜 DB NOT NULL 위반이 된다. 대신 모델 기본값과 같은 유효한 값을 기본값으로 준다.
+  - 요청 스키마의 제약은 모델 제약을 그대로 반영한다. 길이는 `Annotated[str, StringConstraints(...)]`, choices는 `models.TextChoices`를 필드 타입으로 직접 사용한다 (`api.py`가 `full_clean()`을 호출하지 않으므로 스키마가 유일한 검증 지점이다).
+  - 응답 스키마의 choices 필드는 `str`로 둔다. DB에 남아 있을 수 있는 규격 밖 값 때문에 조회가 500이 되는 것을 막기 위함이다.
 - commit(커밋) 관련 요청이 오면 `commit` SKILL(`.claude/skills/commit/SKILL.md`)의 내용을 우선 참고하여 진행한다.
 
 ## 설정
