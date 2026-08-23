@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import include, path
 
-from todos.api import api
+from yorisa.api import api
 
 
 def index(request):
@@ -27,9 +27,13 @@ def index(request):
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("accounts/", view=include("accounts.urls")),
+    # 서비스 진입점
     path("", index, name="index"),
+    # 관리자
+    path("admin/", admin.site.urls),
+    # REST API (django-ninja) — 라우터 마운트는 yorisa/api.py 참고
     path("api/", api.urls),
+    # 앱 템플릿 뷰
+    path("accounts/", include("accounts.urls")),
     path("todos/", include("todos.urls")),
 ]
