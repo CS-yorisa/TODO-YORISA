@@ -1,6 +1,33 @@
 {% load todo_extras %}
 <input type="hidden" id="current-category-id" value="{{ current_category_id }}">
 
+{% if due_soon_count > 0 %}
+<div class="todo-due-banner {% if due_filter == 'week' %}todo-due-banner--active{% endif %}">
+    {% if due_filter == 'week' %}
+    <span class="todo-due-banner__text">⏰ 이번 주 마감 {{ due_soon_count }}개 보는 중</span>
+    <button
+        type="button"
+        class="todo-due-banner__btn todo-due-banner__btn--ghost"
+        hx-get="/todos/"
+        hx-target="#todo-section"
+        hx-swap="innerHTML"
+    >
+        전체 보기
+    </button>
+    {% else %}
+    <button
+        type="button"
+        class="todo-due-banner__btn"
+        hx-get="/todos/?due=week"
+        hx-target="#todo-section"
+        hx-swap="innerHTML"
+    >
+        ⏰ 이번 주 마감 {{ due_soon_count }}개 보기 →
+    </button>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="todo-add-card">
     <form
         hx-post="/todos/create/"
@@ -8,7 +35,6 @@
         hx-swap="innerHTML"
         hx-on::after-request="this.reset(); resetAddCategoryPicker(); resetAddDueDateBtn()"
     >
-        {% csrf_token %}
         <div class="todo-add-card__row">
             <span class="todo-add-card__plus">📝</span>
             <input class="todo-add-card__input" type="text" name="title" placeholder="새 할 일을 입력하세요..." required>
@@ -41,10 +67,11 @@
                     <input type="hidden" name="category_id" id="add-category-id" value="{{ current_category_id }}">
                 </div>
                 <div class="due-date-picker-wrap">
+                    <span class="d-day-badge" id="add-d-day-badge" style="display: none;"></span>
                     <button type="button" id="add-due-btn" class="due-badge due-badge--none" onclick="openDuePicker(this)">
                         📅 기한 추가
                     </button>
-                    <input type="date" id="add-due-date" name="due_date" class="due-date-input" onchange="updateAddDueDateBtn(this)">
+                    <input type="date" id="add-due-date" name="due_date" class="due-date-input">
                 </div>
             </div>
             <button class="todo-add-card__submit" type="submit">추가하기</button>
@@ -75,8 +102,25 @@
         </button>
         {% endfor %}
     </div>
+    <button type="button" class="todo-delete-toggle" id="todo-delete-toggle" onclick="toggleTodoDeleteMode()">
+        🗑️ 삭제
+    </button>
 </div>
 
-<div id="todo-list">
+<div class="todo-delete-bar" id="todo-delete-bar">
+    <form
+        hx-post="/todos/delete/"
+        hx-target="#todo-list"
+        hx-swap="innerHTML"
+        hx-on::after-request="clearTodoSelection()"
+    >
+        <span class="todo-delete-bar__count" id="todo-delete-count">⚠️ 삭제할 항목을 선택하세요</span>
+        <input type="hidden" id="todo-delete-ids" name="ids" value="">
+        <input type="hidden" name="category_id" value="{{ current_category_id }}">
+        <button type="submit" class="todo-delete-submit" id="todo-delete-submit" disabled>선택 삭제</button>
+    </form>
+</div>
+
+<div id="todo-list" class="todo-list">
     {% include "todos/components/todo_items.html" %}
 </div>

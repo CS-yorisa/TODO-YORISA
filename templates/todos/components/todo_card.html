@@ -1,5 +1,6 @@
 {% load todo_extras %}
 <div class="todo-card {% if todo.status == 'done' %}todo-card--done{% endif %}" id="todo-card-{{ todo.id }}">
+    <input type="checkbox" class="todo-card__bulk-check" data-id="{{ todo.id }}" onchange="onTodoCheckChange()">
     <button
         class="todo-card__select {% if todo.status == 'done' %}todo-card__select--selected{% endif %}"
         hx-post="/todos/{{ todo.id }}/status/"
@@ -45,13 +46,18 @@
         hx-swap="outerHTML"
     >
         <div class="due-date-picker-wrap">
+            {% with status=todo.due_date|due_status d_day=todo.due_date|d_day_label %}
+            {% if d_day %}
+            <span class="d-day-badge d-day-badge--{{ status }}">{{ d_day }}</span>
+            {% endif %}
             <button
                 type="button"
-                class="due-badge due-badge--{{ todo.due_date|due_status }}"
+                class="due-badge due-badge--{{ status }}"
                 onclick="openDuePicker(this)"
             >
-                📅 {% if todo.due_date %}{{ todo.due_date|date:"Y/n/j" }}{% else %}기한{% endif %}
+                📅 {% if todo.due_date %}{{ todo.due_date|date:"Y/n/j" }}{% if status == 'overdue' %} 지남{% endif %}{% else %}기한{% endif %}
             </button>
+            {% endwith %}
             <input
                 type="date"
                 name="due_date"
@@ -98,4 +104,13 @@
             </button>
         </div>
     </div>
+    <button
+        type="button"
+        class="todo-card__delete"
+        hx-post="/todos/delete/"
+        hx-target="#todo-list"
+        hx-swap="innerHTML"
+        hx-vals='{"ids": "{{ todo.id }}", "category_id": "{{ current_category_id }}"}'
+        aria-label="할 일 삭제"
+    ></button>
 </div>

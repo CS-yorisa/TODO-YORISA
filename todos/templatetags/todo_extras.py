@@ -23,3 +23,15 @@ def due_status(due_date):
     elif due_date == today:
         return 'today'
     return 'upcoming'
+
+
+@register.filter
+def d_day_label(due_date):
+    if not due_date:
+        return ''
+    delta = (due_date - date.today()).days
+    if delta < 0:
+        return ''
+    if delta == 0:
+        return 'D-DAY'
+    return f'D-{delta}'

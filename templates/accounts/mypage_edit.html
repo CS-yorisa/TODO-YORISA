@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}정보 수정 — Todo Yorisa{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+    <div class="auth-card">
+        <a href="/" class="auth-logo">🍳 Todo Yorisa</a>
+        <h1 class="auth-title">정보 수정</h1>
+        <p class="auth-desc">변경할 정보를 입력하세요.</p>
+
+        {% if error %}
+        <p class="form-error">{{ error }}</p>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="last_name" class="form-label">성</label>
+                    <input type="text" id="last_name" name="last_name" class="form-input" value="{{ profile.last_name }}" placeholder="홍" required>
+                </div>
+                <div class="form-group">
+                    <label for="first_name" class="form-label">이름</label>
+                    <input type="text" id="first_name" name="first_name" class="form-input" value="{{ profile.first_name }}" placeholder="길동" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">이메일</label>
+                <input type="email" id="email" name="email" class="form-input" value="{{ profile.email|default:'' }}" placeholder="example@email.com">
+            </div>
+
+            <button type="submit" class="btn btn--primary btn--lg btn--full">저장</button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'accounts:mypage' %}" class="auth-link">취소하고 돌아가기</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

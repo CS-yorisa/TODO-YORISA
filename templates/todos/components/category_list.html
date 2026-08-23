@@ -30,7 +30,6 @@
             hx-swap="innerHTML"
             hx-on::after-request="clearCategorySelection()"
         >
-            {% csrf_token %}
             <input
                 class="category-edit-input"
                 type="text"

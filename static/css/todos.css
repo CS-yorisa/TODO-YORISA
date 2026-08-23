@@ -1,4 +1,5 @@
 /* ===== Todo List Page ===== */
+.todo-page { min-height: 100vh; background: linear-gradient(135deg, #D8F3DC 0%, var(--bg) 40%, #FFF9DB 100%); }
 .todo-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; padding-top: 40px; padding-bottom: 60px; }
 .category-sidebar { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 16px; position: sticky; top: 80px; }
 .category-sidebar__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 8px; }
@@ -33,6 +34,13 @@
 .category-create-form__btn { padding: 7px; border-radius: var(--radius-sm); border: 1px dashed var(--border); font-size: 0.85rem; color: var(--text-muted); transition: all 0.15s; }
 .category-create-form__btn:hover { border-color: var(--primary); color: var(--primary); background: #D8F3DC; }
 
+.todo-due-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; padding: 12px 18px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #FFF3E0, #FFE8CC); border: 1px solid #FBBF24; }
+.todo-due-banner--active { background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-color: #F59E0B; }
+.todo-due-banner__text { font-size: 0.9rem; font-weight: 700; color: #92400E; }
+.todo-due-banner__btn { font-size: 0.9rem; font-weight: 700; color: #92400E; background: none; border: none; cursor: pointer; padding: 0; transition: opacity 0.15s; }
+.todo-due-banner__btn:hover { opacity: 0.75; }
+.todo-due-banner__btn--ghost { font-size: 0.8rem; font-weight: 600; text-decoration: underline; }
+
 .todo-add-card { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 16px 20px; margin-bottom: 16px; }
 .todo-add-card__row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .todo-add-card__plus { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
@@ -52,8 +60,36 @@
 .status-filter__btn:hover { background: var(--bg-card); color: var(--text); }
 .status-filter__btn--active { background: var(--bg-card); color: var(--primary-dark); font-weight: 600; border-color: var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 
-.todo-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; transition: box-shadow 0.15s; }
+.todo-card { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg-card); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; transition: box-shadow 0.15s; }
 .todo-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+.todo-card__delete { position: absolute; top: -11px; right: -11px; z-index: 2; width: 26px; height: 26px; border: 1.5px solid var(--border); border-radius: 50%; background: var(--bg-card); box-shadow: 0 1px 4px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1; color: var(--text-muted); cursor: pointer; opacity: 0; transition: opacity 0.15s, color 0.15s, background 0.15s, border-color 0.15s; }
+.todo-card__delete::before { content: '×'; }
+.todo-card:hover .todo-card__delete { opacity: 1; }
+.todo-card__delete:hover { color: #DC2626; font-weight: 700; background: #FEE2E2; border-color: #FCA5A5; }
+.todo-card__delete::after { content: '삭제'; position: absolute; top: 100%; right: 0; margin-top: 4px; padding: 3px 7px; border-radius: 4px; background: #1F2937; color: #fff; font-size: 0.7rem; font-weight: 500; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 5; }
+.todo-card__delete:hover::after { opacity: 1; }
+
+.todo-delete-toggle { font-size: 0.85rem; font-weight: 500; padding: 6px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+.todo-delete-toggle:hover { color: #DC2626; border-color: #FCA5A5; }
+.todo-delete-toggle.active { background: #DC2626; color: #fff; border-color: #DC2626; font-weight: 700; animation: todoDeleteTogglePulse 0.3s ease; }
+@keyframes todoDeleteTogglePulse { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+
+.todo-delete-bar { display: none; align-items: center; margin-bottom: 14px; padding: 10px 16px; border-radius: var(--radius-sm); background: #FEE2E2; border: 1.5px solid #FCA5A5; animation: popIn 0.18s cubic-bezier(0.16, 1, 0.3, 1); }
+.todo-delete-bar form { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.todo-delete-bar__count { font-size: 0.85rem; color: #991B1B; font-weight: 700; }
+.todo-delete-submit { padding: 7px 18px; border-radius: var(--radius-sm); background: #DC2626; color: #fff; font-size: 0.85rem; font-weight: 700; border: none; cursor: pointer; transition: background 0.15s, opacity 0.15s; }
+.todo-delete-submit:hover:not(:disabled) { background: #B91C1C; }
+.todo-delete-submit:disabled { background: #FCA5A5; cursor: not-allowed; opacity: 0.8; }
+
+.todo-list.delete-mode .todo-card { border-color: #FCA5A5; background: #FFF5F5; box-shadow: inset 3px 0 0 #DC2626; }
+.todo-list.delete-mode .todo-card:hover { box-shadow: inset 3px 0 0 #DC2626, 0 2px 12px rgba(220,38,38,0.15); }
+
+.todo-card__bulk-check { display: none; appearance: none; width: 22px; height: 22px; flex-shrink: 0; cursor: pointer; border: 2px solid #FCA5A5; border-radius: 50%; background: transparent; transition: all 0.15s; }
+.todo-card__bulk-check:hover { border-color: #DC2626; }
+.todo-card__bulk-check:checked { background: #DC2626; border-color: #DC2626; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 5l2.5 2.5L8 3' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-size: 10px; background-repeat: no-repeat; background-position: center; }
+.todo-list.delete-mode .todo-card__bulk-check { display: inline-block; }
+.todo-list.delete-mode .todo-card__select { display: none; }
+.todo-list.delete-mode .todo-card__delete { display: none; }
 .todo-card--done .todo-card__body { opacity: 0.5; }
 .todo-card--done .todo-card__title { text-decoration: line-through; }
 .todo-card__select { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); background: none; cursor: pointer; flex-shrink: 0; transition: all 0.15s; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: #fff; }
@@ -140,13 +176,16 @@
 .todo-card__status--in_progress { background: #FFF3CD; color: #92600A; }
 .todo-card__status--done { background: #D8F3DC; color: var(--primary-dark); }
 
-.due-date-picker-wrap { position: relative; display: flex; align-items: center; }
+.due-date-picker-wrap { position: relative; display: flex; align-items: center; gap: 5px; }
 .due-badge { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: none; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .due-badge:hover { filter: brightness(0.9); }
 .due-badge--none { color: var(--text-muted); background: var(--bg-alt); }
 .due-badge--upcoming { color: var(--primary-dark); background: #D8F3DC; }
 .due-badge--today { color: #C2410C; background: #FFEDD5; }
 .due-badge--overdue { color: #DC2626; background: #FEE2E2; }
+.d-day-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; flex-shrink: 0; white-space: nowrap; color: #fff; letter-spacing: 0.02em; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.d-day-badge--today { background: linear-gradient(135deg, #FB923C, #EA580C); }
+.d-day-badge--upcoming { background: linear-gradient(135deg, var(--primary-light), var(--primary)); }
 .due-date-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 .due-date-form { display: flex; align-items: center; flex-shrink: 0; }
 

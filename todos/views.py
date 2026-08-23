@@ -1,9 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.db.models import Count
-from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Case, Count, IntegerField, Value, When
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_POST
 
 from todos.models import Category, Todo
@@ -13,18 +13,44 @@ def _member_categories(member):
     return Category.objects.filter(member=member).annotate(todo_count=Count('todos'))
 
 
-def _context(request, category_id='', status_filter=''):
+def _due_soon_count(member):
+    today = date.today()
+    return Todo.objects.filter(
+        member=member, due_date__gte=today, due_date__lte=today + timedelta(days=6)
+    ).exclude(status=Todo.Status.DONE).count()
+
+
+def _context(request, category_id='', status_filter='', due_filter=''):
     todos = Todo.objects.filter(member=request.user)
     if category_id:
         todos = todos.filter(category_id=category_id)
     if status_filter:
         todos = todos.filter(status=status_filter)
+    if due_filter == 'week':
+        today = date.today()
+        todos = todos.filter(
+            due_date__gte=today, due_date__lte=today + timedelta(days=6)
+        ).exclude(status=Todo.Status.DONE)
+    today = date.today()
+    todos = todos.annotate(
+        is_overdue=Case(
+            When(
+                due_date__lt=today,
+                status__in=[Todo.Status.TODO, Todo.Status.IN_PROGRESS],
+                then=Value(1),
+            ),
+            default=Value(0),
+            output_field=IntegerField(),
+        )
+    ).order_by('-is_overdue', 'id')
     return {
         'todos': todos,
         'categories': _member_categories(request.user),
         'total_count': Todo.objects.filter(member=request.user).count(),
         'status_filter': status_filter,
         'current_category_id': category_id,
+        'due_filter': due_filter,
+        'due_soon_count': _due_soon_count(request.user),
         'Status': Todo.Status,
     }
 
@@ -33,7 +59,8 @@ def _context(request, category_id='', status_filter=''):
 def todo_list(request):
     category_id = request.GET.get('category', '')
     status_filter = request.GET.get('status', '')
-    ctx = _context(request, category_id, status_filter)
+    due_filter = request.GET.get('due', '')
+    ctx = _context(request, category_id, status_filter, due_filter)
     hx_target = request.headers.get('HX-Target', '')
     if hx_target == 'todo-list':
         return render(request, 'todos/components/todo_items.html', ctx)
@@ -122,7 +149,7 @@ def category_create(request):
     name = request.POST.get('name', '').strip()
     if name:
         Category.objects.get_or_create(member=request.user, name=name)
-    return redirect('todo_list')
+    return render(request, 'todos/components/category_list.html', _category_list_context(request.user))
 
 
 def _category_list_context(member):
