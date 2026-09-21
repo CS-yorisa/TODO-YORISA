@@ -16,6 +16,21 @@ from todos.schemas import (
 router = Router(tags=["todos"], auth=django_auth)
 
 
+def _apply_category(data: dict, request) -> None:
+    """data 딕셔너리에 "category" 키가 있으면 소유권을 검증하고 "category_id"로 치환한다.
+
+    `payload.dict()`(POST/PUT, 항상 "category" 키 존재)와
+    `payload.dict(exclude_unset=True)`(PATCH, "category"가 없을 수 있음) 양쪽에서
+    공용으로 쓴다. "category" 키가 없으면 아무 것도 하지 않는다.
+    """
+    if "category" not in data:
+        return
+    category_id = data.pop("category")
+    if category_id is not None:
+        get_object_or_404(Category, id=category_id, member=request.user)
+    data["category_id"] = category_id
+
+
 @router.get("/categories/", response=list[CategoryOut])
 def category_list_api(request):
     return Category.objects.filter(member=request.user)
@@ -68,11 +83,8 @@ def todo_list_api(request, status: Todo.Status | None = None):
 
 @router.post("/", response={201: TodoList})
 def todo_create_api(request, payload: TodoCreate):
-    if payload.category is not None:
-        get_object_or_404(Category, id=payload.category, member=request.user)
-
     data = payload.dict()
-    data["category_id"] = data.pop("category")
+    _apply_category(data, request)
     todo = Todo.objects.create(member=request.user, **data)
     return 201, todo
 
@@ -86,11 +98,8 @@ def todo_detail_api(request, todo_id: int):
 def todo_update_api(request, todo_id: int, payload: TodoCreate):
     todo = get_object_or_404(Todo, id=todo_id, member=request.user)
 
-    if payload.category is not None:
-        get_object_or_404(Category, id=payload.category, member=request.user)
-
     data = payload.dict()
-    data["category_id"] = data.pop("category")
+    _apply_category(data, request)
     for attr, value in data.items():
         setattr(todo, attr, value)
     todo.save()
@@ -102,10 +111,7 @@ def todo_patch_api(request, todo_id: int, payload: TodoPatch):
     todo = get_object_or_404(Todo, id=todo_id, member=request.user)
 
     data = payload.dict(exclude_unset=True)
-    if "category" in data and data["category"] is not None:
-        get_object_or_404(Category, id=data["category"], member=request.user)
-    if "category" in data:
-        data["category_id"] = data.pop("category")
+    _apply_category(data, request)
 
     for attr, value in data.items():
         setattr(todo, attr, value)
