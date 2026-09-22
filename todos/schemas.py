@@ -35,6 +35,12 @@ TodoTitle = Annotated[
 DEFAULT_STATUS = Todo.Status("todo")
 
 
+class ErrorDetail(Schema):
+    """에러 응답 바디. OpenAPI 문서화를 위해 `dict` 대신 사용한다."""
+
+    detail: str
+
+
 class CategoryCreate(Schema):
     name: CategoryName
 

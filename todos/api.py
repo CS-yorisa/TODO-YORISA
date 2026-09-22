@@ -8,6 +8,7 @@ from todos.schemas import (
     CategoryCreate,
     CategoryOut,
     CategoryPatch,
+    ErrorDetail,
     TodoCreate,
     TodoList,
     TodoPatch,
@@ -36,7 +37,7 @@ def category_list_api(request):
     return Category.objects.filter(member=request.user)
 
 
-@router.post("/categories/", response={201: CategoryOut, 400: dict})
+@router.post("/categories/", response={201: CategoryOut, 400: ErrorDetail})
 def category_create_api(request, payload: CategoryCreate):
     try:
         category = Category.objects.create(member=request.user, name=payload.name)
@@ -50,7 +51,7 @@ def category_detail_api(request, category_id: int):
     return get_object_or_404(Category, id=category_id, member=request.user)
 
 
-@router.patch("/categories/{category_id}/", response={200: CategoryOut, 400: dict})
+@router.patch("/categories/{category_id}/", response={200: CategoryOut, 400: ErrorDetail})
 def category_patch_api(request, category_id: int, payload: CategoryPatch):
     category = get_object_or_404(Category, id=category_id, member=request.user)
 
