@@ -18,18 +18,21 @@ router = Router(tags=["todos"], auth=django_auth)
 
 
 def _apply_category(data: dict, request) -> None:
-    """data 딕셔너리에 "category" 키가 있으면 소유권을 검증하고 "category_id"로 치환한다.
+    """data 딕셔너리에 "category" 키가 있으면 소유권을 검증하고 조회한 객체로 치환한다.
 
     `payload.dict()`(POST/PUT, 항상 "category" 키 존재)와
     `payload.dict(exclude_unset=True)`(PATCH, "category"가 없을 수 있음) 양쪽에서
     공용으로 쓴다. "category" 키가 없으면 아무 것도 하지 않는다.
+    조회한 Category 객체를 그대로 재사용해 이후 저장 시 재조회를 피한다.
     """
     if "category" not in data:
         return
-    category_id = data.pop("category")
-    if category_id is not None:
+    category_id = data["category"]
+    data["category"] = (
         get_object_or_404(Category, id=category_id, member=request.user)
-    data["category_id"] = category_id
+        if category_id is not None
+        else None
+    )
 
 
 @router.get("/categories/", response=list[CategoryOut])
@@ -76,7 +79,7 @@ def category_delete_api(request, category_id: int):
 
 @router.get("/", response=list[TodoList])
 def todo_list_api(request, status: Todo.Status | None = None):
-    todos = Todo.objects.filter(member=request.user)
+    todos = Todo.objects.filter(member=request.user).select_related("category")
     if status:
         todos = todos.filter(status=status)
     return todos
