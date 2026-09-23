@@ -1,4 +1,5 @@
 import logging
+from datetime import UTC, datetime
 
 import jwt
 from django.conf import settings
@@ -9,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.core.validators import validate_email
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -23,10 +24,10 @@ from accounts.auth import (
     create_reauth_token,
     create_refresh_token,
     decode_token,
+    token_matches_member,
 )
-from accounts.models import Member, Terms
+from accounts.models import Member, Terms, UsedRefreshToken
 from accounts.schemas import (
-    AccessOut,
     ErrorOut,
     LoginIn,
     MemberOut,
@@ -57,6 +58,7 @@ Todo Yorisa 비밀번호 재설정 요청을 받았습니다.
 
 본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다. 비밀번호는 변경되지 않습니다.
 """
+INVALID_TOKEN = {"detail": "유효하지 않은 토큰입니다."}
 INVALID_RESET_LINK = {"detail": "링크가 만료되었거나 이미 사용된 링크입니다. 다시 요청해 주세요."}
 
 
@@ -181,16 +183,35 @@ def password_reset_confirm(request, payload: PasswordResetConfirmIn):
     return 204, None
 
 
-@router.post("/refresh/", response={200: AccessOut, 401: ErrorOut})
+@router.post("/refresh/", response={200: TokenOut, 401: ErrorOut})
 def refresh(request, payload: RefreshIn):
+    """refresh 토큰으로 access 토큰과 새 refresh 토큰을 발급한다 (rotation).
+
+    - 쓴 refresh 토큰은 jti를 기록해 다시 쓸 수 없다. 클라이언트는 응답의 새 refresh 토큰으로 교체해야 한다.
+    - 탈퇴했거나, 토큰 발급 후 비밀번호가 바뀐 회원의 토큰은 거절한다.
+    """
     try:
         token_payload = decode_token(payload.refresh, expected_type="refresh")
     except jwt.InvalidTokenError:
-        return 401, {"detail": "유효하지 않은 토큰입니다."}
-    member_id = token_payload["user_id"]
-    if not Member.objects.filter(pk=member_id, is_active=True).exists():
-        return 401, {"detail": "유효하지 않은 토큰입니다."}
-    return 200, {"access": create_access_token(member_id)}
+        return 401, INVALID_TOKEN
+    member = Member.objects.filter(pk=token_payload["user_id"], is_active=True).first()
+    if member is None or not token_matches_member(token_payload, member):
+        return 401, INVALID_TOKEN
+    jti = token_payload.get("jti")
+    if not jti:
+        return 401, INVALID_TOKEN
+    try:
+        # 동시에 같은 토큰으로 두 번 요청해도 jti unique 제약으로 한쪽만 성공한다.
+        with transaction.atomic():
+            UsedRefreshToken.objects.create(
+                jti=jti, expires_at=datetime.fromtimestamp(token_payload["exp"], UTC)
+            )
+    except IntegrityError:
+        return 401, INVALID_TOKEN
+    return 200, {
+        "access": create_access_token(member.pk),
+        "refresh": create_refresh_token(member.pk),
+    }
 
 
 @profile_router.get("/me/", response=MemberOut)
@@ -279,7 +300,9 @@ def _has_valid_reauth(request) -> bool:
         token_payload = decode_token(token, expected_type="reauth")
     except jwt.InvalidTokenError:
         return False
-    return token_payload["user_id"] == request.user.pk
+    return token_payload["user_id"] == request.user.pk and token_matches_member(
+        token_payload, request.user
+    )
 
 
 def _get_member_from_uid(uidb64: str) -> Member | None:

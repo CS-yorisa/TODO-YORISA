@@ -58,3 +58,20 @@ class Terms(models.Model):
 
     def __str__(self):
         return f"{self.get_kind_display()} v{self.version}"
+
+
+class UsedRefreshToken(models.Model):
+    """재발급에 이미 사용한 refresh 토큰의 ID(jti).
+
+    `/api/auth/refresh/`는 refresh 토큰을 쓸 때마다 새 refresh 토큰을 발급(rotation)하고,
+    쓴 토큰의 jti를 여기 기록해 같은 토큰을 다시 쓰지 못하게 한다.
+    만료된 기록은 `accounts.tasks.delete_expired_used_refresh_tokens`가 주기적으로 지운다.
+    """
+
+    jti = models.CharField("토큰 ID", max_length=32, unique=True)
+    expires_at = models.DateTimeField("토큰 만료일시", db_index=True)
+    used_at = models.DateTimeField("사용일시", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "사용한 refresh 토큰"
+        verbose_name_plural = "사용한 refresh 토큰"

@@ -182,6 +182,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "accounts.tasks.detect_dormant_members",
         "schedule": timedelta(hours=24),
     },
+    "delete-expired-used-refresh-tokens": {
+        "task": "accounts.tasks.delete_expired_used_refresh_tokens",
+        "schedule": timedelta(hours=24),
+    },
 }
 
 # 장기 미접속(휴면) 판정 기준일수

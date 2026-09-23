@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
-from accounts.models import Member
+from accounts.models import Member, UsedRefreshToken
 
 logger = logging.getLogger(__name__)
 
@@ -37,3 +37,14 @@ def detect_dormant_members() -> int:
 
     logger.info("휴면 회원 탐지 작업 완료: 총 %d명 (기준: %d일)", count, settings.DORMANT_MEMBER_DAYS)
     return count
+
+
+@shared_task(name="accounts.tasks.delete_expired_used_refresh_tokens")
+def delete_expired_used_refresh_tokens() -> int:
+    """만료된 refresh 토큰의 사용 기록을 지운다.
+
+    만료된 토큰은 서명 검증 단계에서 이미 거절되므로 기록을 남겨둘 필요가 없다.
+    """
+    deleted, _ = UsedRefreshToken.objects.filter(expires_at__lt=timezone.now()).delete()
+    logger.info("만료된 refresh 토큰 사용 기록 삭제: %d건", deleted)
+    return deleted

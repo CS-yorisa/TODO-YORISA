@@ -81,10 +81,6 @@ class TokenOut(Schema):
     refresh: str
 
 
-class AccessOut(Schema):
-    access: str
-
-
 class ErrorOut(Schema):
     detail: str
 
