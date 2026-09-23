@@ -84,7 +84,12 @@ def todo_create(request):
             member=request.user, title=title, category=category, due_date=due_date
         )
 
-    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
+    status_filter = request.POST.get('status', '')
+    due_filter = request.POST.get('due', '')
+    return render(request, 'todos/components/todo_items.html', {
+        **_context(request, category_id, status_filter, due_filter),
+        'show_oob': True,
+    })
 
 
 @login_required
@@ -124,9 +129,14 @@ def todo_category_update(request, todo_id):
 @require_POST
 def todo_delete(request):
     category_id = request.POST.get('category_id', '')
+    status_filter = request.POST.get('status', '')
+    due_filter = request.POST.get('due', '')
     ids = [i for i in request.POST.get('ids', '').split(',') if i]
     Todo.objects.filter(member=request.user, id__in=ids).delete()
-    return render(request, 'todos/components/todo_items.html', {**_context(request, category_id), 'show_oob': True})
+    return render(request, 'todos/components/todo_items.html', {
+        **_context(request, category_id, status_filter, due_filter),
+        'show_oob': True,
+    })
 
 
 @login_required
@@ -134,7 +144,17 @@ def todo_delete(request):
 def todo_due_date_update(request, todo_id):
     todo = get_object_or_404(Todo, id=todo_id, member=request.user)
     due_date = request.POST.get('due_date', '')
-    todo.due_date = date.fromisoformat(due_date) if due_date else None
+    if due_date:
+        try:
+            todo.due_date = date.fromisoformat(due_date)
+        except ValueError:
+            return render(request, 'todos/components/todo_card.html', {
+                'todo': todo,
+                'Status': Todo.Status,
+                'categories': _member_categories(request.user),
+            })
+    else:
+        todo.due_date = None
     todo.save()
     return render(request, 'todos/components/todo_card.html', {
         'todo': todo,
