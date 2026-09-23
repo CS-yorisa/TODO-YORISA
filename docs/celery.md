@@ -20,6 +20,10 @@
 
 JWT 로그인(`accounts/api.py`의 `login`)은 성공 시 `Member.last_login`을 직접 갱신한다. 세션 로그인 경로는 `django.contrib.auth.login()`이 자동으로 갱신한다.
 
+### `accounts.tasks.delete_expired_used_refresh_tokens`
+
+refresh 토큰 재사용을 막기 위해 기록한 `UsedRefreshToken` 중 토큰 만료일시(`expires_at`)가 지난 행을 삭제한다. 만료된 토큰은 서명 검증 단계에서 이미 거절되므로 기록이 필요 없다. 매일 1회(`CELERY_BEAT_SCHEDULE`) 실행된다.
+
 ## 로컬 개발 환경
 
 ### Redis 실행

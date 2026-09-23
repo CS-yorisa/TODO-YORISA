@@ -6,9 +6,10 @@ erDiagram
         int id PK
         string username UK
         string password
-        string first_name
-        string last_name
+        string first_name "미사용(AbstractUser 상속)"
+        string last_name "미사용(AbstractUser 상속)"
         string email "nullable, 미탈퇴 회원 간 UK"
+        string nickname "max_length 30"
         datetime withdrawn_at "nullable, 탈퇴일시(NULL=활성)"
         bool is_staff
         bool is_active
@@ -30,6 +31,22 @@ erDiagram
         string status "todo | in_progress | done (기본 todo)"
         date due_date "nullable"
     }
+    Terms {
+        int id PK
+        string kind "service | privacy | marketing"
+        string version "max_length 20"
+        string title "max_length 100"
+        text content
+        bool is_required "기본 True"
+        datetime effective_at "시행일시"
+        datetime created_at
+    }
+    UsedRefreshToken {
+        int id PK
+        string jti UK "refresh 토큰 ID"
+        datetime expires_at "토큰 만료일시(index)"
+        datetime used_at
+    }
     Category }o--|| Member : "member"
     Todo }o--|| Member : "member"
     Todo }o--|| Category : "category"
@@ -45,6 +62,15 @@ erDiagram
     동일 email로 재가입도 가능하다.
   - `email`이 NULL인 활성 회원은 여러 명 존재할 수 있다. `Member.save()`에서 빈 문자열을
     NULL로 정규화하므로 email 미입력 회원 간 충돌이 발생하지 않는다.
+
+### Terms
+- `unique_terms_kind_version` — 같은 종류(`kind`)에 같은 버전(`version`) 중복 불가
+- `ordering = ["kind", "-effective_at"]`
+- 다른 모델과 관계 없음 (약관 동의 기록은 아직 없음)
+
+### UsedRefreshToken
+- `jti` unique — 같은 refresh 토큰으로 두 번 갱신할 수 없게 한다 (동시 요청도 한쪽만 성공)
+- 다른 모델과 관계 없음. 만료된 행은 Celery beat 작업이 매일 삭제한다.
 
 ### Category
 - `unique_together = [member, name]` — 동일 회원 내 카테고리 이름 중복 불가
