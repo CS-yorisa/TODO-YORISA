@@ -37,7 +37,15 @@
     >
         <div class="todo-add-card__row">
             <span class="todo-add-card__plus">📝</span>
-            <input class="todo-add-card__input" type="text" name="title" placeholder="새 할 일을 입력하세요..." required>
+            <input
+                id="todo-add-title"
+                class="todo-add-card__input"
+                type="text"
+                name="title"
+                placeholder="새 할 일을 입력하세요..."
+                required
+                hx-preserve
+            >
         </div>
         <div class="todo-add-card__actions">
             <div class="todo-add-card__pickers">
@@ -124,3 +132,10 @@
 <div id="todo-list" class="todo-list">
     {% include "todos/components/todo_items.html" %}
 </div>
+
+{% if request.headers.hx_request %}
+{# 섹션을 다시 불러올 때 사이드바 카테고리 개수·선택 상태도 함께 갱신 #}
+<ul id="category-list" class="category-list" hx-swap-oob="outerHTML">
+    {% include "todos/components/category_list.html" %}
+</ul>
+{% endif %}

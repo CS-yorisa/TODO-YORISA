@@ -240,3 +240,37 @@ function toggleCatPicker(id, event) {
 function closeCatPicker(id) {
     document.getElementById('cat-picker-' + id).classList.remove('category-picker--open');
 }
+
+// ===== 변경 후 자동 갱신 =====
+// 카드·카테고리 변경 요청은 한 영역만 교체하므로, 요청이 끝나면 현재 보고 있는 조건 그대로
+// #todo-section 전체(+ 사이드바 OOB)를 다시 불러와 필터·개수·선택지를 최신 상태로 맞춘다.
+
+function getCurrentTodoSectionUrl() {
+    if (document.querySelector('.todo-due-banner--active')) return '/todos/?due=week';
+
+    const activeTab = document.querySelector('.status-filter__btn--active');
+    const params = new URL(activeTab ? activeTab.getAttribute('hx-get') : '/todos/', location.origin).searchParams;
+    const status = params.get('status') || '';
+
+    // 보고 있던 카테고리가 삭제되었으면 전체 보기로 돌아간다
+    let categoryId = document.getElementById('current-category-id')?.value || '';
+    if (categoryId && !document.querySelector(`.category-edit-check[data-id="${categoryId}"]`)) {
+        categoryId = '';
+    }
+    return `/todos/?category=${categoryId}&status=${status}`;
+}
+
+function refreshTodoSection() {
+    return htmx.ajax('GET', getCurrentTodoSectionUrl(), { target: '#todo-section', swap: 'innerHTML' });
+}
+
+const handledTodoRequests = new WeakSet();
+
+document.addEventListener('htmx:afterSettle', function (evt) {
+    const { xhr, requestConfig, pathInfo } = evt.detail;
+    if (!xhr || handledTodoRequests.has(xhr)) return;
+    if (requestConfig?.verb !== 'post' || !pathInfo?.requestPath?.startsWith('/todos/')) return;
+    if (xhr.status < 200 || xhr.status >= 300) return;
+    handledTodoRequests.add(xhr);
+    refreshTodoSection();
+});
