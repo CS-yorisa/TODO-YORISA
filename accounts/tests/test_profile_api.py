@@ -283,3 +283,23 @@ class MemberSessionAuthTest(TestCase):
         self.assertEqual(response.status_code, 204)
         response = self.web.get("/api/accounts/me/")
         self.assertEqual(response.status_code, 401)
+
+
+class ReauthTokenInvalidatedOnPasswordChangeTest(TestCase):
+    def setUp(self):
+        self.member = Member.objects.create_user(username="user1", password="strong-pass-9231")
+
+    def test_reauth_token_rejected_after_password_change(self):
+        reauth_token = create_reauth_token(self.member.pk)
+        self.member.set_password("brand-new-pass-4827")
+        self.member.save(update_fields=["password"])
+        # 비밀번호 변경 후 새로 받은 access 토큰 + 변경 전 재확인 토큰
+        response = client.patch(
+            "/me/",
+            json={"nickname": "요리왕"},
+            headers={
+                "Authorization": f"Bearer {create_access_token(self.member.pk)}",
+                "X-Reauth-Token": reauth_token,
+            },
+        )
+        self.assertEqual(response.status_code, 403)

@@ -4,8 +4,8 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 from freezegun import freeze_time
 
-from accounts.models import Member
-from accounts.tasks import detect_dormant_members
+from accounts.models import Member, UsedRefreshToken
+from accounts.tasks import delete_expired_used_refresh_tokens, detect_dormant_members
 
 
 @override_settings(DORMANT_MEMBER_DAYS=90)
@@ -73,3 +73,15 @@ class DetectDormantMembersTest(TestCase):
 
         self.assertTrue(result.successful())
         self.assertEqual(result.result, 1)
+
+
+class DeleteExpiredUsedRefreshTokensTest(TestCase):
+    def test_expired_records_deleted(self):
+        now = timezone.now()
+        UsedRefreshToken.objects.create(jti="expired", expires_at=now - timedelta(seconds=1))
+        UsedRefreshToken.objects.create(jti="alive", expires_at=now + timedelta(days=1))
+
+        deleted = delete_expired_used_refresh_tokens()
+
+        self.assertEqual(deleted, 1)
+        self.assertEqual(list(UsedRefreshToken.objects.values_list("jti", flat=True)), ["alive"])
