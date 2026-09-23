@@ -11,7 +11,7 @@
 | --- | --- |
 | `templates/accounts/mypage.html` | 회원정보 조회 화면 (아이디/이름/이메일 표시, "정보 수정"/"비밀번호 변경" 버튼) |
 | `templates/accounts/mypage_verify.html` | 정보 수정 전 비밀번호 재확인 화면 |
-| `templates/accounts/mypage_edit.html` | 회원정보 수정 폼 (성/이름/이메일) |
+| `templates/accounts/mypage_edit.html` | 회원정보 수정 폼 (성/이름/이메일) + 회원 탈퇴 영역·확인 다이얼로그 ('회원 탈퇴' 직접 입력 시 탈퇴 버튼 활성화) |
 | `templates/accounts/password_verify.html` | 비밀번호 변경 전 비밀번호 재확인 화면 |
 | `templates/accounts/password_edit.html` | 새 비밀번호 입력 폼 (새 비밀번호/새 비밀번호 확인) |
 | `templates/accounts/password_find.html` | 로그인 화면의 "비밀번호가 기억나지 않으시나요?" → 비밀번호 찾기(아이디/이메일 입력) 화면 |
@@ -77,6 +77,28 @@ path("password/find/", views.password_find, name="password_find"),
   - 토큰으로 접속했을 때 새 비밀번호를 입력받아 저장하는 화면/뷰도 별도로 필요 (현재 없음 — `password_edit`은 로그인 후 "본인이 현재 비밀번호를 아는 상태"에서 바꾸는 화면이라 용도가 다름)
   - 존재하지 않는 아이디/이메일이어도 계정 존재 여부가 유추되지 않도록 응답 문구는 항상 동일하게 유지할 것 (현재 템플릿의 "입력하신 이메일로 비밀번호 재설정 안내를 보내드렸습니다." 문구를 그대로 유지하면 됨)
   - 실패(입력값 누락 등) 시 `accounts/password_find.html`을 에러 컨텍스트로 다시 렌더링하는 처리 추가 검토
+
+### 7. 회원 탈퇴 — `/api/accounts/me/`에 세션 인증 추가
+
+- 현재: 탈퇴 화면은 완성되어 있음. `mypage_edit.html`의 탈퇴 다이얼로그에서 '회원 탈퇴'를 입력하고 "탈퇴하기"를 누르면 `static/js/accounts.js`가 `DELETE /api/accounts/me/`를 `fetch`로 호출함 (`X-CSRFToken` 헤더 포함). 성공(204)하면 `accounts:logout`을 거쳐 첫 화면으로 이동
+- 문제: `accounts/api.py`의 `profile_router`가 `auth=JWTAuth()`만 받는다. 웹 화면은 세션 로그인이라 JWT가 없어서 **지금은 탈퇴 버튼을 누르면 401**이 나고, 다이얼로그에 오류가 표시됨
+- **바꿔야 할 것**:
+  - `profile_router = Router(tags=["accounts"], auth=[JWTAuth(), django_auth])`로 세션 인증을 함께 받도록 변경 (`from ninja.security import django_auth`, `todos/api.py`와 같은 방식)
+    - ninja는 인증 수단을 목록 순서대로 시도하므로 기존 JWT 호출·테스트는 그대로 동작함
+    - `django_auth`는 CSRF를 검사하므로, 토큰 없이 세션으로 호출하면 403이 되는 것이 정상
+  - 이렇게 바꾸면 1번(조회)과 3번(수정)도 화면에서 `GET`/`PATCH /api/accounts/me/`를 세션으로 호출하는 방식으로 연동할 수 있음
+  - `accounts/auth.py`의 `JWTAuth` 독스트링("현재는 어떤 라우터에도 적용하지 않으며")이 실제와 다르므로 함께 수정
+  - 테스트 추가 (`accounts/tests/test_profile_api.py`): `django.test.Client`로 `force_login` 후 `DELETE /api/accounts/me/` → 204·`is_active=False`, `enforce_csrf_checks=True`에서 토큰 없이 호출 → 403, 비로그인 → 401
+- 참고: 탈퇴 전 비밀번호 재확인은 따로 하지 않음. 탈퇴 영역이 있는 `mypage_edit`는 2번(`mypage_verify`)을 거쳐 들어오는 화면이므로 2번 가드가 구현되면 함께 보호됨
+
+### 8. 회원정보 수정 API(`PATCH /api/accounts/me/`) 검증 보완
+
+3번을 API로 연동할 경우 아래 문제를 먼저 해결해야 함.
+
+- `accounts/schemas.py`의 `MemberUpdateIn`에서 `first_name`/`last_name`이 `str | None`임. 모델은 NOT NULL 컬럼이라 `{"first_name": null}`을 보내면 DB 오류가 나고, `update_me`의 `IntegrityError` 처리 때문에 "이미 사용 중인 이메일입니다."라는 **잘못된 메시지**가 응답됨
+  - CLAUDE.md 규칙대로 NOT NULL 필드는 `| None`을 빼고 기본값(`""`)을 주며, 길이 제약은 `Annotated[str, StringConstraints(max_length=150)]`로 모델과 맞출 것
+- `update_me`에 이메일 형식 검증이 없음 (`signup`처럼 `validate_email` 적용 필요)
+- `docs/api.md`의 "회원 탈퇴 정책"에 "탈퇴 시 `email`은 `None`으로 비운다"라고 되어 있으나, 현재 코드는 email을 보존하고 `withdrawn_at`을 기록함 (커밋 `4905c1e`). 문서 갱신 필요
 
 ## 참고
 

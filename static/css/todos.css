@@ -253,3 +253,21 @@ span.flatpickr-weekday { background: #95D5B2 !important; color: #fff !important;
 }
 .fp-month-option:hover { background: #D8F3DC; }
 .fp-month-option.active { background: #95D5B2; color: #fff; font-weight: 700; border-color: #95D5B2; }
+/* ===== Todo 상세보기 / 수정 ===== */
+.todo-card__title--btn { max-width: 100%; padding: 0; text-align: left; color: inherit; cursor: pointer; }
+.todo-card__title--btn:hover { text-decoration: underline; }
+.todo-detail { width: min(480px, calc(100% - 32px)); margin: auto; padding: 28px; border: none; border-radius: var(--radius); box-shadow: var(--shadow-lg); background: var(--bg-card); color: var(--text); }
+.todo-detail::backdrop { background: rgba(0, 0, 0, 0.4); }
+.todo-detail__header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.todo-detail__header .todo-card__status { cursor: default; }
+.todo-detail__header .todo-card__status:hover { opacity: 1; transform: none; }
+.todo-detail__title { font-size: 1.2rem; font-weight: 700; line-height: 1.4; word-break: break-word; }
+.todo-detail__due { margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.todo-detail__desc { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-sm); background: var(--bg-alt); font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.todo-detail__desc--empty { color: var(--text-muted); }
+.todo-detail__form { flex-direction: column; gap: 16px; }
+.todo-detail__form-title { font-size: 1.1rem; font-weight: 700; }
+.todo-detail__form .form-error { margin-bottom: 0; }
+.todo-detail__textarea { resize: vertical; font-family: inherit; line-height: 1.5; }
+.todo-detail__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.todo-detail__form .todo-detail__actions { margin-top: 4px; }

@@ -240,3 +240,165 @@ function toggleCatPicker(id, event) {
 function closeCatPicker(id) {
     document.getElementById('cat-picker-' + id).classList.remove('category-picker--open');
 }
+
+// ===== 변경 후 자동 갱신 =====
+// 카드·카테고리 변경 요청은 한 영역만 교체하므로, 요청이 끝나면 현재 보고 있는 조건 그대로
+// #todo-section 전체(+ 사이드바 OOB)를 다시 불러와 필터·개수·선택지를 최신 상태로 맞춘다.
+
+function getCurrentTodoSectionUrl() {
+    if (document.querySelector('.todo-due-banner--active')) return '/todos/?due=week';
+
+    const activeTab = document.querySelector('.status-filter__btn--active');
+    const params = new URL(activeTab ? activeTab.getAttribute('hx-get') : '/todos/', location.origin).searchParams;
+    const status = params.get('status') || '';
+
+    // 보고 있던 카테고리가 삭제되었으면 전체 보기로 돌아간다
+    let categoryId = document.getElementById('current-category-id')?.value || '';
+    if (categoryId && !document.querySelector(`.category-edit-check[data-id="${categoryId}"]`)) {
+        categoryId = '';
+    }
+    return `/todos/?category=${categoryId}&status=${status}`;
+}
+
+function refreshTodoSection() {
+    return htmx.ajax('GET', getCurrentTodoSectionUrl(), { target: '#todo-section', swap: 'innerHTML' });
+}
+
+const handledTodoRequests = new WeakSet();
+
+document.addEventListener('htmx:afterSettle', function (evt) {
+    const { xhr, requestConfig, pathInfo } = evt.detail;
+    if (!xhr || handledTodoRequests.has(xhr)) return;
+    if (requestConfig?.verb !== 'post' || !pathInfo?.requestPath?.startsWith('/todos/')) return;
+    if (xhr.status < 200 || xhr.status >= 300) return;
+    handledTodoRequests.add(xhr);
+    refreshTodoSection();
+});
+
+// ===== 할 일 상세보기 / 수정 =====
+
+let todoDetailData = null;
+
+function formatDueDate(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return `${y}/${m}/${d}`;
+}
+
+function showTodoDetailError(elId, message) {
+    const errorEl = document.getElementById(elId);
+    errorEl.textContent = message;
+    errorEl.style.display = message ? 'block' : 'none';
+}
+
+function renderTodoDetailView(todo) {
+    const statusLabel = document.querySelector(`#todo-detail-status-labels [data-value="${todo.status}"]`);
+    const categoryLabel = todo.category_id
+        ? document.querySelector(`#todo-detail-category-labels [data-value="${todo.category_id}"]`)
+        : null;
+
+    const statusEl = document.getElementById('todo-detail-status');
+    statusEl.textContent = statusLabel ? statusLabel.textContent : todo.status;
+    statusEl.className = `todo-card__status todo-card__status--${todo.status}`;
+
+    const categoryEl = document.getElementById('todo-detail-category');
+    categoryEl.textContent = categoryLabel ? categoryLabel.textContent : '카테고리 없음';
+    categoryEl.className = 'todo-card__tag ' + (categoryLabel ? `cat-color-${todo.category_id % 8}` : 'todo-add-cat-btn--empty');
+
+    document.getElementById('todo-detail-title').textContent = todo.title;
+    document.getElementById('todo-detail-due').textContent = todo.due_date
+        ? `📅 ${formatDueDate(todo.due_date)}`
+        : '📅 기한 없음';
+
+    const descEl = document.getElementById('todo-detail-desc');
+    descEl.textContent = todo.description || '설명이 없어요.';
+    descEl.classList.toggle('todo-detail__desc--empty', !todo.description);
+}
+
+function fillTodoDetailForm(todo) {
+    document.getElementById('todo-detail-input-title').value = todo.title;
+    document.getElementById('todo-detail-input-desc').value = todo.description;
+}
+
+function setTodoDetailMode(mode) {
+    const isEdit = mode === 'edit';
+    if (isEdit) fillTodoDetailForm(todoDetailData);
+    showTodoDetailError('todo-detail-error', '');
+    document.getElementById('todo-detail-view').style.display = isEdit ? 'none' : 'block';
+    document.getElementById('todo-detail-form').style.display = isEdit ? 'flex' : 'none';
+    if (isEdit) document.getElementById('todo-detail-input-title').focus();
+}
+
+async function openTodoDetail(id) {
+    const dialog = document.getElementById('todo-detail-dialog');
+    try {
+        const response = await fetch(`/api/todos/${id}/`);
+        if (!response.ok) throw new Error();
+        todoDetailData = await response.json();
+    } catch (error) {
+        alert('할 일 정보를 불러오지 못했습니다.');
+        return;
+    }
+    renderTodoDetailView(todoDetailData);
+    setTodoDetailMode('view');
+    dialog.showModal();
+}
+
+function closeTodoDetail() {
+    document.getElementById('todo-detail-dialog').close();
+}
+
+document.addEventListener('submit', async function (evt) {
+    const form = evt.target;
+    if (form.id !== 'todo-detail-form') return;
+    evt.preventDefault();
+
+    // form.title은 폼 자체의 title 속성을 가리키므로 elements로 접근한다
+    const fields = form.elements;
+    // 상태·카테고리·기한은 카드에서 바로 수정하므로 여기서는 제목·설명만 다룬다
+    const values = {
+        title: fields.title.value.trim(),
+        description: fields.description.value,
+    };
+    if (!values.title) {
+        showTodoDetailError('todo-detail-error', '제목을 입력해 주세요.');
+        return;
+    }
+
+    // 바뀐 필드만 PATCH로 보낸다
+    const payload = {};
+    Object.keys(values).forEach(key => {
+        if (values[key] !== todoDetailData[key]) payload[key] = values[key];
+    });
+    if (Object.keys(payload).length === 0) {
+        setTodoDetailMode('view');
+        return;
+    }
+
+    const saveBtn = document.getElementById('todo-detail-save');
+    saveBtn.disabled = true;
+    try {
+        const response = await fetch(`/api/todos/${todoDetailData.id}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': fields.csrfmiddlewaretoken.value,
+            },
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const message = response.status === 422 || typeof data.detail !== 'string'
+                ? '입력값을 확인해 주세요.'
+                : data.detail;
+            showTodoDetailError('todo-detail-error', message);
+            return;
+        }
+        closeTodoDetail();
+        refreshTodoSection();
+    } catch (error) {
+        showTodoDetailError('todo-detail-error', '저장에 실패했습니다.');
+    } finally {
+        saveBtn.disabled = false;
+    }
+});
