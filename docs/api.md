@@ -41,8 +41,7 @@ PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 �
 | `LoginIn` | 로그인 요청 바디 (username, password) |
 | `RefreshIn` | 토큰 갱신 요청 바디 (refresh) |
 | `MemberOut` | 회원가입 응답 (id, username, email, nickname) |
-| `TokenOut` | 로그인 응답 (access, refresh) |
-| `AccessOut` | 토큰 갱신 응답 (access) |
+| `TokenOut` | 로그인·토큰 갱신 응답 (access, refresh) |
 | `PasswordResetIn` | 비밀번호 재설정 메일 요청 바디 (username, email) |
 | `PasswordResetConfirmIn` | 비밀번호 재설정 요청 바디 (uid, token, new_password) |
 | `TermsOut` | 약관 응답 (id, kind, title, version, content, is_required, effective_at). `kind`는 `str` |
@@ -56,9 +55,25 @@ PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 �
 | POST | `/signup/` | 201 | 회원가입(username, email, nickname, password). username 또는 email 중복 시 409, 이메일 형식 오류·비밀번호 정책 위반 시 400 |
 | GET | `/terms/` | 200 | 현재 시행 중인 약관 목록 (로그인 불필요). 아래 [약관](#약관) 참고 |
 | POST | `/login/` | 200 | 로그인, access/refresh 토큰 발급. 인증 실패 시 401 |
-| POST | `/refresh/` | 200 | refresh 토큰으로 access 토큰 재발급. 토큰 무효/만료 시 401 |
+| POST | `/refresh/` | 200 / 401 | refresh 토큰으로 access 토큰과 **새 refresh 토큰** 발급. 토큰 무효·만료·재사용, 탈퇴 회원, 발급 후 비밀번호 변경 시 401. 아래 [토큰 갱신](#토큰-갱신) 참고 |
 | POST | `/password/reset/` | 202 | 아이디·이메일(대소문자 무시)이 일치하는 활성 회원에게 재설정 링크 메일 발송. 계정 존재 여부가 드러나지 않도록 **항상 같은 202 응답** |
 | POST | `/password/reset/confirm/` | 204 / 400 | 메일 링크의 uid·token으로 새 비밀번호 설정. 토큰 무효·만료·재사용, 비밀번호 정책 위반 시 400 |
+
+### 토큰 갱신
+
+`POST /refresh/` `{"refresh": "<refresh 토큰>"}` → `{"access": "...", "refresh": "..."}`
+
+- **재발급(rotation)**: 갱신할 때마다 새 refresh 토큰을 발급한다. 쓴 refresh 토큰은 ID(`jti`)를 `UsedRefreshToken`에 기록해 **다시 쓸 수 없다**(401). 클라이언트는 응답의 새 refresh 토큰으로 바꿔 저장해야 한다.
+- 새 refresh 토큰의 수명도 발급 시점부터 7일이므로, 7일 안에 한 번이라도 갱신하면 로그인이 계속 유지된다.
+- 같은 토큰으로 동시에 두 번 요청해도 `jti` unique 제약으로 한쪽만 성공한다.
+- 만료된 사용 기록은 Celery beat 작업(`delete_expired_used_refresh_tokens`, 매일)이 지운다.
+
+### 비밀번호 변경 시 토큰 무효화
+
+모든 토큰(access, refresh, 재확인)에 비밀번호 해시에서 파생한 값(`auth_hash`, `Member.get_session_auth_hash()`)을 담는다. 비밀번호를 변경·재설정하면 이 값이 달라지므로 **그 전에 발급된 토큰은 모두 거절**된다(access는 401, refresh는 401, 재확인은 403).
+
+- 세션 로그인도 같은 값으로 비밀번호 변경 시 끊긴다(Django 기본 동작). 비밀번호 변경 API를 세션으로 호출한 경우만 현재 세션을 유지한다.
+- `auth_hash`가 없는 토큰(이 검사 도입 전에 발급된 토큰)도 무효로 본다. 배포 직후 기존 JWT 사용자는 한 번 다시 로그인해야 한다.
 
 ### 약관
 

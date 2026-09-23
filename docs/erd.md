@@ -41,6 +41,12 @@ erDiagram
         datetime effective_at "시행일시"
         datetime created_at
     }
+    UsedRefreshToken {
+        int id PK
+        string jti UK "refresh 토큰 ID"
+        datetime expires_at "토큰 만료일시(index)"
+        datetime used_at
+    }
     Category }o--|| Member : "member"
     Todo }o--|| Member : "member"
     Todo }o--|| Category : "category"
@@ -61,6 +67,10 @@ erDiagram
 - `unique_terms_kind_version` — 같은 종류(`kind`)에 같은 버전(`version`) 중복 불가
 - `ordering = ["kind", "-effective_at"]`
 - 다른 모델과 관계 없음 (약관 동의 기록은 아직 없음)
+
+### UsedRefreshToken
+- `jti` unique — 같은 refresh 토큰으로 두 번 갱신할 수 없게 한다 (동시 요청도 한쪽만 성공)
+- 다른 모델과 관계 없음. 만료된 행은 Celery beat 작업이 매일 삭제한다.
 
 ### Category
 - `unique_together = [member, name]` — 동일 회원 내 카테고리 이름 중복 불가
