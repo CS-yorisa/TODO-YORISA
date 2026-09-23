@@ -133,6 +133,8 @@
     {% include "todos/components/todo_items.html" %}
 </div>
 
+{% include "todos/components/todo_detail_dialog.html" %}
+
 {% if request.headers.hx_request %}
 {# 섹션을 다시 불러올 때 사이드바 카테고리 개수·선택 상태도 함께 갱신 #}
 <ul id="category-list" class="category-list" hx-swap-oob="outerHTML">
