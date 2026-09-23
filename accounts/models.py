@@ -5,7 +5,11 @@ from django.db.models import Q
 
 class Member(AbstractUser):
     email = models.EmailField("이메일", null=True, blank=True)
+    nickname = models.CharField("닉네임", max_length=30)
     withdrawn_at = models.DateTimeField("탈퇴일시", null=True, blank=True)
+
+    # createsuperuser 실행 시 닉네임도 입력받도록 한다.
+    REQUIRED_FIELDS = ["email", "nickname"]
 
     class Meta(AbstractUser.Meta):
         constraints = [

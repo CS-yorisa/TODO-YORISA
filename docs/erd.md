@@ -6,9 +6,10 @@ erDiagram
         int id PK
         string username UK
         string password
-        string first_name
-        string last_name
+        string first_name "미사용(AbstractUser 상속)"
+        string last_name "미사용(AbstractUser 상속)"
         string email "nullable, 미탈퇴 회원 간 UK"
+        string nickname "max_length 30"
         datetime withdrawn_at "nullable, 탈퇴일시(NULL=활성)"
         bool is_staff
         bool is_active

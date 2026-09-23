@@ -2,6 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 from django.conf import settings
+from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 from ninja.testing import TestClient
@@ -20,6 +21,7 @@ class SignupTest(TestCase):
             json={
                 "username": "newuser",
                 "email": "newuser@test.com",
+                "nickname": "요리사",
                 "password": "strong-pass-9231",
             },
         )
@@ -27,6 +29,7 @@ class SignupTest(TestCase):
         data = response.json()
         self.assertEqual(data["username"], "newuser")
         self.assertEqual(data["email"], "newuser@test.com")
+        self.assertEqual(data["nickname"], "요리사")
         self.assertNotIn("password", data)
 
     def test_password_hashed(self):
@@ -35,6 +38,7 @@ class SignupTest(TestCase):
             json={
                 "username": "newuser",
                 "email": "newuser@test.com",
+                "nickname": "요리사",
                 "password": "strong-pass-9231",
             },
         )
@@ -47,7 +51,7 @@ class SignupTest(TestCase):
         )
         response = client.post(
             "/signup/",
-            json={"username": "dup", "email": "new@test.com", "password": "another-pass-111"},
+            json={"username": "dup", "email": "new@test.com", "nickname": "요리사", "password": "another-pass-111"},
         )
         self.assertEqual(response.status_code, 409)
 
@@ -57,7 +61,7 @@ class SignupTest(TestCase):
         )
         response = client.post(
             "/signup/",
-            json={"username": "newuser", "email": "dup@test.com", "password": "another-pass-111"},
+            json={"username": "newuser", "email": "dup@test.com", "nickname": "요리사", "password": "another-pass-111"},
         )
         self.assertEqual(response.status_code, 409)
 
@@ -70,26 +74,45 @@ class SignupTest(TestCase):
         )
         response = client.post(
             "/signup/",
-            json={"username": "newuser", "email": "dup@test.com", "password": "another-pass-111"},
+            json={"username": "newuser", "email": "dup@test.com", "nickname": "요리사", "password": "another-pass-111"},
         )
         self.assertEqual(response.status_code, 201)
 
     def test_invalid_email_format(self):
         response = client.post(
             "/signup/",
-            json={"username": "newuser", "email": "not-an-email", "password": "strong-pass-9231"},
+            json={"username": "newuser", "email": "not-an-email", "nickname": "요리사", "password": "strong-pass-9231"},
         )
         self.assertEqual(response.status_code, 400)
 
     def test_weak_password_rejected(self):
         response = client.post(
             "/signup/",
-            json={"username": "newuser", "email": "newuser@test.com", "password": "12345678"},
+            json={"username": "newuser", "email": "newuser@test.com", "nickname": "요리사", "password": "12345678"},
         )
         self.assertEqual(response.status_code, 400)
 
     def test_missing_fields(self):
         response = client.post("/signup/", json={"username": "newuser"})
+        self.assertEqual(response.status_code, 422)
+
+    def test_missing_nickname(self):
+        response = client.post(
+            "/signup/",
+            json={"username": "newuser", "email": "newuser@test.com", "password": "strong-pass-9231"},
+        )
+        self.assertEqual(response.status_code, 422)
+
+    def test_blank_nickname_rejected(self):
+        response = client.post(
+            "/signup/",
+            json={
+                "username": "newuser",
+                "email": "newuser@test.com",
+                "nickname": "   ",
+                "password": "strong-pass-9231",
+            },
+        )
         self.assertEqual(response.status_code, 422)
 
     def test_missing_email(self):
@@ -101,6 +124,7 @@ class SignupTest(TestCase):
 
 class LoginTest(TestCase):
     def setUp(self):
+        cache.clear()
         self.member = Member.objects.create_user(username="user1", password="strong-pass-9231")
         assert self.member is not None
 

@@ -28,6 +28,11 @@ def create_refresh_token(member_id: int) -> str:
     return _create_token(member_id, "refresh", settings.JWT_REFRESH_TOKEN_LIFETIME)
 
 
+def create_reauth_token(member_id: int) -> str:
+    """비밀번호 재확인 후 발급하는 단기 토큰. 정보 수정·비밀번호 변경 API에 `X-Reauth-Token`으로 보낸다."""
+    return _create_token(member_id, "reauth", settings.JWT_REAUTH_TOKEN_LIFETIME)
+
+
 def decode_token(token: str, expected_type: str) -> dict[str, Any]:
     """서명·만료를 검증하고 payload를 반환한다. 실패 시 jwt.InvalidTokenError(하위 예외 포함)."""
     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
@@ -39,7 +44,7 @@ def decode_token(token: str, expected_type: str) -> dict[str, Any]:
 class JWTAuth(HttpBearer):
     """Authorization: Bearer <access> 헤더를 검증하는 인증 클래스.
 
-    현재는 어떤 라우터에도 적용하지 않으며, 추후 todos API 등에 auth=JWTAuth()로 붙여 재사용한다.
+    회원 API(`profile_router`)에 세션 인증(`django_auth`)과 함께 적용되어 있다.
     """
 
     def authenticate(self, request: HttpRequest, token: str) -> Member | None:

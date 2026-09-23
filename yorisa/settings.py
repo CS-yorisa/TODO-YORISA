@@ -129,6 +129,44 @@ AUTH_USER_MODEL = "accounts.Member"
 JWT_ALGORITHM = "HS256"
 JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
 JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=7)
+# 비밀번호 재확인 후 정보 수정·비밀번호 변경을 할 수 있는 시간
+JWT_REAUTH_TOKEN_LIFETIME = timedelta(minutes=10)
+
+
+# API 요청 횟수 제한 (django-ninja throttle) — 비밀번호 무작위 대입·메일 폭탄 방지
+# 요청 기록은 Django 캐시에 저장한다. 기본 캐시(LocMemCache)는 프로세스마다 따로라서
+# 운영에서 워커를 여러 개 띄우면 Redis 같은 공유 캐시(CACHES)를 설정해야 제한이 정확하다.
+NINJA_DEFAULT_THROTTLE_RATES = {
+    # django-ninja 기본값
+    "auth": "10000/day",
+    "user": "10000/day",
+    "anon": "1000/day",
+    # 엔드포인트별 제한 (accounts/api.py의 throttle 클래스 scope와 대응)
+    "login": "10/m",  # IP당
+    "verify_password": "5/m",  # 회원당
+    "password_reset": "5/h",  # IP당
+}
+# 앞단 프록시 수. 0이면 X-Forwarded-For를 무시하고 REMOTE_ADDR로 IP를 식별한다.
+# (설정하지 않으면 클라이언트가 보낸 X-Forwarded-For를 그대로 믿어 제한을 우회할 수 있다)
+# 운영에서 Nginx 등 프록시 뒤에 두면 .env로 프록시 수를 지정한다.
+NINJA_NUM_PROXIES = env.int("NINJA_NUM_PROXIES", default=0)
+# 같은 계정으로 비밀번호 재설정 메일을 다시 보내기까지의 최소 간격(초). IP를 바꿔 가며 보내는 메일 폭탄 방지.
+PASSWORD_RESET_EMAIL_COOLDOWN = 5 * 60
+
+
+# 이메일 설정 — 기본은 콘솔 출력(개발용). 실제 발송은 .env의 EMAIL_URL로 SMTP를 지정한다.
+# 예) EMAIL_URL=smtp+tls://user:app-password@smtp.gmail.com:587
+EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
+vars().update(EMAIL_CONFIG)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Todo Yorisa <noreply@yorisa.local>")
+
+# 비밀번호 재설정 링크 유효 시간(초). Django 기본값(3일)은 너무 길어 1시간으로 줄인다.
+PASSWORD_RESET_TIMEOUT = 60 * 60
+# 비밀번호 재설정 메일에 넣을 링크 경로. 새 비밀번호 입력 화면이 이 경로의 uid·token을
+# `/api/auth/password/reset/confirm/`으로 보낸다. (화면은 아직 없음 — 프론트엔드에서 구현 필요)
+PASSWORD_RESET_URL = env(
+    "PASSWORD_RESET_URL", default="/accounts/password/reset/{uid}/{token}/"
+)
 
 
 # Celery 설정
