@@ -45,6 +45,7 @@ PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 �
 | `AccessOut` | 토큰 갱신 응답 (access) |
 | `PasswordResetIn` | 비밀번호 재설정 메일 요청 바디 (username, email) |
 | `PasswordResetConfirmIn` | 비밀번호 재설정 요청 바디 (uid, token, new_password) |
+| `TermsOut` | 약관 응답 (id, kind, title, version, content, is_required, effective_at). `kind`는 `str` |
 | `MessageOut` | 안내 메시지 응답 (detail) |
 | `ErrorOut` | 에러 응답 (detail) |
 
@@ -53,10 +54,20 @@ PyJWT 기반 회원가입/로그인 API. 서명 알고리즘은 HS256, 서명 �
 | 메서드 | 경로 | 응답 코드 | 설명 |
 |--------|------|-----------|------|
 | POST | `/signup/` | 201 | 회원가입(username, email, nickname, password). username 또는 email 중복 시 409, 이메일 형식 오류·비밀번호 정책 위반 시 400 |
+| GET | `/terms/` | 200 | 현재 시행 중인 약관 목록 (로그인 불필요). 아래 [약관](#약관) 참고 |
 | POST | `/login/` | 200 | 로그인, access/refresh 토큰 발급. 인증 실패 시 401 |
 | POST | `/refresh/` | 200 | refresh 토큰으로 access 토큰 재발급. 토큰 무효/만료 시 401 |
 | POST | `/password/reset/` | 202 | 아이디·이메일(대소문자 무시)이 일치하는 활성 회원에게 재설정 링크 메일 발송. 계정 존재 여부가 드러나지 않도록 **항상 같은 202 응답** |
 | POST | `/password/reset/confirm/` | 204 / 400 | 메일 링크의 uid·token으로 새 비밀번호 설정. 토큰 무효·만료·재사용, 비밀번호 정책 위반 시 400 |
+
+### 약관
+
+회원가입 화면에서 보여줄 약관을 `Terms` 모델로 관리한다. 등록·수정은 Django admin에서 한다.
+
+- 종류(`kind`): `service`(서비스 이용약관), `privacy`(개인정보 수집·이용 동의), `marketing`(마케팅 정보 수신 동의)
+- 약관이 바뀌면 기존 행을 고치지 않고 **새 버전을 추가**한다 (`kind` + `version` 중복 불가).
+- `GET /terms/`는 종류별로 **시행일시(`effective_at`)가 지난 버전 중 가장 최근 것** 하나씩을 `service → privacy → marketing` 순서로 돌려준다. 시행 예정 버전은 포함하지 않는다.
+- 가입 시 약관 동의 여부는 아직 저장하지 않는다.
 
 ### 비밀번호 찾기(재설정)
 

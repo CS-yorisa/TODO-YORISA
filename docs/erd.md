@@ -31,6 +31,16 @@ erDiagram
         string status "todo | in_progress | done (기본 todo)"
         date due_date "nullable"
     }
+    Terms {
+        int id PK
+        string kind "service | privacy | marketing"
+        string version "max_length 20"
+        string title "max_length 100"
+        text content
+        bool is_required "기본 True"
+        datetime effective_at "시행일시"
+        datetime created_at
+    }
     Category }o--|| Member : "member"
     Todo }o--|| Member : "member"
     Todo }o--|| Category : "category"
@@ -46,6 +56,11 @@ erDiagram
     동일 email로 재가입도 가능하다.
   - `email`이 NULL인 활성 회원은 여러 명 존재할 수 있다. `Member.save()`에서 빈 문자열을
     NULL로 정규화하므로 email 미입력 회원 간 충돌이 발생하지 않는다.
+
+### Terms
+- `unique_terms_kind_version` — 같은 종류(`kind`)에 같은 버전(`version`) 중복 불가
+- `ordering = ["kind", "-effective_at"]`
+- 다른 모델과 관계 없음 (약관 동의 기록은 아직 없음)
 
 ### Category
 - `unique_together = [member, name]` — 동일 회원 내 카테고리 이름 중복 불가
