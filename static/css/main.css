@@ -43,6 +43,8 @@ button { cursor: pointer; font: inherit; border: none; background: none; }
 .btn--ghost:hover { background: var(--bg-alt); }
 .btn--outline { border: 2px solid var(--primary); color: var(--primary); }
 .btn--outline:hover { background: var(--primary); color: #fff; }
+.btn--danger { border: 2px solid var(--accent-dark); color: var(--accent-dark); }
+.btn--danger:hover { background: var(--accent-dark); color: #fff; }
 .btn--lg { padding: 14px 28px; font-size: 1rem; border-radius: var(--radius); }
 .btn--full { width: 100%; }
 
@@ -287,6 +289,64 @@ button { cursor: pointer; font: inherit; border: none; background: none; }
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+.auth-withdraw {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    text-align: left;
+}
+.auth-withdraw__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.auth-withdraw__desc {
+    margin: 4px 0 16px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+.withdraw-dialog {
+    width: min(420px, calc(100% - 32px));
+    margin: auto;
+    padding: 28px;
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    text-align: left;
+}
+.withdraw-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+}
+.withdraw-dialog__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.withdraw-dialog__desc {
+    margin: 8px 0 16px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+.withdraw-dialog__desc strong {
+    color: var(--accent-dark);
+}
+.withdraw-dialog__input {
+    width: 100%;
+}
+.withdraw-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+}
+.btn--danger:disabled,
+.btn--danger:disabled:hover {
+    border-color: var(--border);
+    background: none;
+    color: #b0b5bd;
+    cursor: not-allowed;
 }
 .auth-link {
     color: var(--primary);

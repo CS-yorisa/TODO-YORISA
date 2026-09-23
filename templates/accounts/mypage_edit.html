@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}정보 수정 — Todo Yorisa{% endblock %}
 
@@ -35,9 +36,53 @@
             <button type="submit" class="btn btn--primary btn--lg btn--full">저장</button>
         </form>
 
+        <section class="auth-withdraw">
+            <h2 class="auth-withdraw__title">회원 탈퇴</h2>
+            <p class="auth-withdraw__desc">탈퇴하면 이 계정으로 다시 로그인할 수 없습니다.</p>
+
+            <button type="button" id="withdraw-open-btn" class="btn btn--danger btn--lg btn--full">회원 탈퇴</button>
+        </section>
+
+        <dialog id="withdraw-dialog" class="withdraw-dialog">
+            <h2 class="withdraw-dialog__title">정말 탈퇴하시겠습니까?</h2>
+            <p class="withdraw-dialog__desc">
+                탈퇴 후에는 이 계정으로 다시 로그인할 수 없습니다.<br>
+                계속하려면 아래에 <strong>회원 탈퇴</strong>를 정확히 입력해 주세요.
+            </p>
+
+            <p id="withdraw-error" class="form-error" style="display: none;"></p>
+
+            <input
+                type="text"
+                id="withdraw-confirm-input"
+                class="form-input withdraw-dialog__input"
+                placeholder="회원 탈퇴"
+                autocomplete="off"
+            >
+
+            <div class="withdraw-dialog__actions">
+                <button type="button" id="withdraw-cancel-btn" class="btn btn--outline">취소</button>
+                <button
+                    type="button"
+                    id="withdraw-btn"
+                    class="btn btn--danger"
+                    data-api-url="/api/accounts/me/"
+                    data-redirect-url="{% url 'accounts:logout' %}"
+                    data-confirm-text="회원 탈퇴"
+                    disabled
+                >
+                    탈퇴하기
+                </button>
+            </div>
+        </dialog>
+
         <p class="auth-footer">
             <a href="{% url 'accounts:mypage' %}" class="auth-link">취소하고 돌아가기</a>
         </p>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/accounts.js' %}"></script>
 {% endblock %}
