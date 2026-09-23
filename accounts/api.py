@@ -24,7 +24,7 @@ from accounts.auth import (
     create_refresh_token,
     decode_token,
 )
-from accounts.models import Member
+from accounts.models import Member, Terms
 from accounts.schemas import (
     AccessOut,
     ErrorOut,
@@ -39,6 +39,7 @@ from accounts.schemas import (
     ReauthOut,
     RefreshIn,
     SignupIn,
+    TermsOut,
     TokenOut,
 )
 
@@ -106,6 +107,22 @@ def signup(request, payload: SignupIn):
         # 사전 검사와 저장 사이의 동시 가입 레이스에서도 DB unique 제약 위반을 409로 응답
         return 409, {"detail": "이미 사용 중인 사용자 이름 또는 이메일입니다."}
     return 201, member
+
+
+@router.get("/terms/", response=list[TermsOut])
+def list_terms(request):
+    """현재 시행 중인 약관 목록 (회원가입 화면용, 로그인 불필요).
+
+    종류별로 시행일시가 지난 버전 중 가장 최근 것 하나씩을 돌려준다.
+    순서는 `Terms.Kind`에 선언한 순서(서비스 이용약관 → 개인정보 → 마케팅)다.
+    """
+    current: dict[str, Terms] = {}
+    for terms in Terms.objects.filter(effective_at__lte=timezone.now()).order_by(
+        "kind", "-effective_at"
+    ):
+        current.setdefault(terms.kind, terms)
+    kind_order = {kind: index for index, kind in enumerate(Terms.Kind.values)}
+    return sorted(current.values(), key=lambda t: kind_order.get(t.kind, len(kind_order)))
 
 
 @router.post(

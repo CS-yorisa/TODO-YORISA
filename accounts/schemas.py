@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 
 from ninja import Schema
@@ -61,6 +62,18 @@ class MemberOut(Schema):
     username: str
     email: str | None
     nickname: str
+
+
+class TermsOut(Schema):
+    """약관 응답. `kind`는 규격 밖 값이 있어도 조회가 실패하지 않도록 `str`로 둔다."""
+
+    id: int
+    kind: str
+    title: str
+    version: str
+    content: str
+    is_required: bool
+    effective_at: datetime
 
 
 class TokenOut(Schema):
